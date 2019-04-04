@@ -16,18 +16,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	
 	public GUI(){
 		super("GO");
-		setSize(2000,1000);
+		setSize(1000,500);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
 		
 		gameWindow = new JPanel();
 		gameWindow.setLayout(null);
-		
 		board = new JPanel(new GridLayout(18,18,0,0));
 		board.setPreferredSize(new Dimension(773, 773));
 		board.setBounds(50,50,773,773);
 		board.setVisible(true);
 		board.setEnabled(true);
+		board.addMouseListener(this);
 		board.setBackground(new Color(181,129,32));
 		
 		for(int i = 0; i < 18; i++) {
@@ -36,6 +36,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 				intersections[i][j].setPreferredSize(new Dimension(42,42));
 				intersections[i][j].setBorder(BorderFactory.createLineBorder(Color.BLACK));
 				intersections[i][j].setVisible(true);
+				//intersections[i][j].addMouseListener(this);
+					
 				intersections[i][j].setBackground(new Color(181, 129, 32));
 				
 				board.add(intersections[i][j]);
@@ -83,25 +85,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 
 	public void mouseClicked(MouseEvent e) {
-		Component c = board.getComponentAt(getMousePosition());
-		int mouseIndexX = (int)Math.floor(e.getX());
-		int mouseIndexY = (int)Math.floor(e.getY());
-		Dimension panelSize = c.getSize();
-		Point panelQuad = c.getLocation();
-		
-		if(mouseIndexX < (panelSize.width/2) + panelQuad.x && mouseIndexY < (panelSize.height/2) + panelQuad.y) {
-			System.out.println("The mouse is in the first quadrant");
-		}
-		if(mouseIndexX > (panelSize.width/2) + panelQuad.x && mouseIndexY < (panelSize.height/2) + panelQuad.y) {
-			System.out.println("The mouse is in the second quadrant");
-		}
-		if(mouseIndexX < (panelSize.width/2) + panelQuad.x && mouseIndexY > (panelSize.height/2) + panelQuad.y) {
-			System.out.println("The mouse is in the third quadrant");
-		}
-		if(mouseIndexX > (panelSize.width/2) + panelQuad.x && mouseIndexY > (panelSize.height/2) + panelQuad.y) {
-			System.out.println("the mouse is in the fourth quadrant");
-		}
-		
+		printQuadrant(e);
 		
 	}
 
@@ -118,9 +102,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 
 	@Override
-	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
+	public void mousePressed(MouseEvent e) {
+		//printQuadrant(e);
 	}
 
 	@Override
@@ -132,6 +115,30 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
+		
+	}
+	
+	void printQuadrant(MouseEvent e) {
+		Component c = board.getComponentAt(new Point(e.getX(), e.getY()));
+		int mouseIndexX = (int)Math.floor(e.getX());
+		int mouseIndexY = (int)Math.floor(e.getY());
+		Dimension panelSize = c.getSize();
+		Point panelQuad = c.getLocation();
+		if(mouseIndexX < (panelSize.width/2) + panelQuad.x && mouseIndexY < (panelSize.height/2) + panelQuad.y) {
+			System.out.println("The mouse is in the first quadrant");
+		}
+		if(mouseIndexX > (panelSize.width/2) + panelQuad.x && mouseIndexY < (panelSize.height/2) + panelQuad.y) {
+			System.out.println("The mouse is in the second quadrant");
+		}
+		if(mouseIndexX < (panelSize.width/2) + panelQuad.x && mouseIndexY > (panelSize.height/2) + panelQuad.y) {
+			System.out.println("The mouse is in the third quadrant");
+		}
+		if(mouseIndexX > (panelSize.width/2) + panelQuad.x && mouseIndexY > (panelSize.height/2) + panelQuad.y) {
+			System.out.println("the mouse is in the fourth quadrant");
+		}
+		
+		System.out.println(((mouseIndexX+17)/42) + "," +((mouseIndexY+17)/42));
+		
 		
 	}
 
