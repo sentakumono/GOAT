@@ -8,46 +8,95 @@ import java.io.IOException;
 public class GUI extends JFrame implements ActionListener, MouseListener, MouseMotionListener{
 
 	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, boardMargin;
-	private static JPanel[][] intersections = new JPanel[18][18];
+	private static JButton[][] intersections = new JButton[19][19];
 	private static GridBagConstraints gbc;
 	private static JTextArea comment,timeline;
 	private static JScrollPane scroll1,scroll2;
-	private static ImageIcon black;
+	private static ImageIcon black, white;
+	public static int turn;
 	public static void main(String[] args) {
 		new GUI();
 	}
 	
 	public GUI(){
 		super("GO");
-		setSize(2000,1000);
+		setSize(1000, 700);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
 		
 		gameWindow = new JPanel();
 		gameWindow.setLayout(null);
-		board = new JPanel(new GridLayout(18,18,0,0));
-		board.setPreferredSize(new Dimension(774, 774));
-		board.setBounds(50,50,774,774);
+		board = new JPanel(new GridLayout(19,19,0,0));
+		board.setPreferredSize(new Dimension(595, 595));
+		board.setBounds(50,50,595,595);
 		board.setVisible(true);
 		board.setEnabled(true);
 		board.addMouseListener(this);
 		board.setBackground(new Color(181,129,32));
+				
+		black = new ImageIcon("PieceIcons/blackCenter.jpg");
+		white = new ImageIcon("PieceIcons/whiteCenter.jpg");
 		
+		turn = 0;
 		
-		black = new ImageIcon("PieceIcons/GoStoneBlack.png");
-		
-		for(int i = 0; i < 18; i++) {
-			for(int j = 0; j < 18; j++) {
-				intersections[i][j] = new JPanel();
-				intersections[i][j].setPreferredSize(new Dimension(42,42));
-				intersections[i][j].setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		for(int i = 0; i < 19; i++) {
+			for(int j = 0; j < 19; j++) {
+				intersections[i][j] = new JButton();
+				if(i == 0) {
+					if(j == 0) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner1.jpg"));
+					}
+					else if (j == 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner2.jpg"));
+					}
+					else {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/top.jpg"));
+					}
+				}
+				
+				else if (i == 18) {
+					if(0 < j && j < 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/bottom.jpg"));
+					}
+					if(j == 0) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner3.jpg"));
+					}
+					if(j == 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner4.jpg"));
+					}
+				}
+				
+				else if(j == 0) {
+					if(0 < i && i < 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/left.jpg"));
+					}
+				}
+				else if(j == 18) {
+					if(0 < i && i < 18	) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/right.jpg"));
+					}
+				}
+				else if ( i == 3 || i == 9 || i == 15) {
+					if(j == 3 || j == 9 || j == 15) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/star.jpg"));
+					}
+					else {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+					}
+				}
+				else {
+					intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+				}
+				
+				intersections[i][j].setBorder(BorderFactory.createEmptyBorder());
 				intersections[i][j].setVisible(true);
 				//intersections[i][j].add(new JLabel(black));
-				intersections[i][j].setBackground(new Color(181, 129, 32));
-				
+			
+				intersections[i][j].addActionListener(this);
 				board.add(intersections[i][j]);
 			}
 		}
+
 		boardMargin = new JPanel();
 		boardMargin.setBounds(50, 50, 850, 850);
 		boardMargin.setBackground(new Color(181, 129, 32));
@@ -94,7 +143,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		scroll2= new JScrollPane(timeline);
 		
 		scroll2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scroll2.setVisible(true);s
+		scroll2.setVisible(true);
 		timelineBox.add(scroll2);
 		
 
@@ -137,8 +186,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 
 	public void mouseClicked(MouseEvent e) {
-		printCoordinate(e);
-		placePiece(e);
 	}
 
 
@@ -164,28 +211,28 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
-		
+		int whitePiece = 0x26AA;
+		int blackPiece = 0x26AB;
+		String s;
+		for(int i=0;i<19;i++) {
+			for(int j = 0; j < 19; j++) {
+				if(arg0.getSource()==intersections[i][j]) {
+					if(turn%2 == 0) {
+						s = Character.toString((char)blackPiece);
+						intersections[i][j].setIcon(black);
+					}
+					else {
+						s = Character.toString((char)whitePiece);
+						intersections[i][j].setIcon(white);
+					}
+					timeline.append(s);
+					timeline.append((i+1) + ", " + (j+1) + "\n");
+					turn++;
+				}
+			}
+		}
 	}
 	
-	void placePiece(MouseEvent e) {
-		int x = (int)Math.floor((double)e.getX()/43);
-		int y = (int)Math.floor((double)e.getY()/43);
-		System.out.println(x + "," + y);
-		
-		JLabel piece =  new JLabel(black);
-		piece.setPreferredSize(new Dimension(35, 35));
-		addConstraint(intersections[y][x], piece, 1, 1, 1, 1, GridBagConstraints.BOTH, GridBagConstraints.CENTER);
-	}
-	void printCoordinate(MouseEvent e) {
-		Component c = board.getComponentAt(new Point(e.getX(), e.getY()));
-		int mouseIndexX = (int)Math.floor(e.getX());
-		int mouseIndexY = (int)Math.floor(e.getY());
-		Dimension panelSize = c.getSize();
-		
-		timeline.append(((1 + (mouseIndexX+17)/panelSize.width)) + "," +(1 + (mouseIndexY+17)/panelSize.height) + "\n");
-		
-		
-	}
+
 
 }
