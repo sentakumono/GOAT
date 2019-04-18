@@ -14,6 +14,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	private static JScrollPane scroll1,scroll2;
 	private static ImageIcon black, white;
 	public static int turn;
+	public static FileManager files;
 	public static void main(String[] args) {
 		new GUI();
 	}
@@ -33,70 +34,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		board.setEnabled(true);
 		board.addMouseListener(this);
 		board.setBackground(new Color(181,129,32));
-				
+		board.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		
 		black = new ImageIcon("PieceIcons/blackCenter.jpg");
 		white = new ImageIcon("PieceIcons/whiteCenter.jpg");
 		
 		turn = 0;
 		
-		for(int i = 0; i < 19; i++) {
-			for(int j = 0; j < 19; j++) {
-				intersections[i][j] = new JButton();
-				if(i == 0) {
-					if(j == 0) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner1.jpg"));
-					}
-					else if (j == 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner2.jpg"));
-					}
-					else {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/top.jpg"));
-					}
-				}
-				
-				else if (i == 18) {
-					if(0 < j && j < 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/bottom.jpg"));
-					}
-					if(j == 0) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner3.jpg"));
-					}
-					if(j == 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner4.jpg"));
-					}
-				}
-				
-				else if(j == 0) {
-					if(0 < i && i < 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/left.jpg"));
-					}
-				}
-				else if(j == 18) {
-					if(0 < i && i < 18	) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/right.jpg"));
-					}
-				}
-				else if ( i == 3 || i == 9 || i == 15) {
-					if(j == 3 || j == 9 || j == 15) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/star.jpg"));
-					}
-					else {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
-					}
-				}
-				else {
-					intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
-				}
-				
-				intersections[i][j].setBorder(BorderFactory.createEmptyBorder());
-				intersections[i][j].setVisible(true);
-				//intersections[i][j].add(new JLabel(black));
-			
-				intersections[i][j].addActionListener(this);
-				board.add(intersections[i][j]);
-			}
-		}
-
+		setBoard();
+		
 		boardMargin = new JPanel();
 		boardMargin.setBounds(50, 50, 850, 850);
 		boardMargin.setBackground(new Color(181, 129, 32));
@@ -154,12 +100,17 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		c.gridy = 1;
 		sidebar.add(timelineBox,c);
 		
+		
+		
 		sidebar.setVisible(true);
 		gameWindow.add(board);
 		//gameWindow.add(boardMargin);
 		gameWindow.add(sidebar);
 		add(gameWindow);
 		setVisible(true);
+		
+		files = new FileManager();
+		files.initiate();		
 	}
 
 	public void addConstraint(JPanel p, Component c, int x, int y, int w, int h, int f, int a) {
@@ -176,12 +127,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		p.add(c, gbc);
 	}
 	
-	@Override
-	public void mouseDragged(MouseEvent arg0) {
+	public void mouseDragged(MouseEvent e) {
 		
 	}
 
-	public void mouseMoved(MouseEvent arg0) {
+	public void mouseMoved(MouseEvent e) {
 		
 	}
 
@@ -189,12 +139,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 
 
-	public void mouseEntered(MouseEvent arg0) {
+	public void mouseEntered(MouseEvent e) {
 		
 	}
 
 
-	public void mouseExited(MouseEvent arg0) {
+	public void mouseExited(MouseEvent e) {
 
 		
 	}
@@ -209,30 +159,96 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent e) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
 		String s;
 		for(int i=0;i<19;i++) {
 			for(int j = 0; j < 19; j++) {
-				if(arg0.getSource()==intersections[i][j]) {
+				
+				if(e.getSource()==intersections[i][j]) {
 					if(turn%2 == 0) {
-						s = Character.toString((char)blackPiece);
-						intersections[i][j].setIcon(black);
+						if(intersections[i][j].getIcon() != black && intersections[i][j].getIcon() != white) {
+							s = Character.toString((char)blackPiece);
+							intersections[i][j].setIcon(black);
+							timeline.append(s);
+							timeline.append((i+1) + ", " + (j+1) + "\n");
+							turn++;
+						}
 					}
 					else {
-						s = Character.toString((char)whitePiece);
-						intersections[i][j].setIcon(white);
+						if(intersections[i][j].getIcon() != black && intersections[i][j].getIcon() != white) {
+							s = Character.toString((char)whitePiece);
+							intersections[i][j].setIcon(white);
+							timeline.append(s);
+							timeline.append((i+1) + ", " + (j+1) + "\n");
+							turn++;
+						}
 					}
-					timeline.append(s);
-					timeline.append((i+1) + ", " + (j+1) + "\n");
-					turn++;
 				}
 			}
 		}
 	}
 	
+	public void setBoard() {
+		for(int i = 0; i < 19; i++) {
+			for(int j = 0; j < 19; j++) {
+				intersections[i][j] = new JButton();
+				if(i == 0) {
+					if(j == 0) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner1.jpg"));
+					}
+					else if (j == 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner2.jpg"));
+					}
+					else {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/top.jpg"));
+					}
+				}
+				
+				else if (i == 18) {
+					if(0 < j && j < 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/bottom.jpg"));
+					}
+					if(j == 0) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner3.jpg"));
+					}
+					if(j == 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner4.jpg"));
+					}
+				}
+				
+				else if(j == 0) {
+					if(0 < i && i < 18) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/left.jpg"));
+					}
+				}
+				else if(j == 18) {
+					if(0 < i && i < 18	) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/right.jpg"));
+					}
+				}
+				else if ( i == 3 || i == 9 || i == 15) {
+					if(j == 3 || j == 9 || j == 15) {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/star.jpg"));
+					}
+					else {
+						intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+					}
+				}
+				else {
+					intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+				}
+				
+				intersections[i][j].setBorder(BorderFactory.createEmptyBorder());
+				intersections[i][j].setVisible(true);
+				//intersections[i][j].add(new JLabel(black));
+			
+				intersections[i][j].addActionListener(this);
+				board.add(intersections[i][j]);
+			}
+		}
+	}
 
 
 }
