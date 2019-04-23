@@ -7,23 +7,86 @@ import java.io.IOException;
 
 public class GUI extends JFrame implements ActionListener, MouseListener, MouseMotionListener{
 
-	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, boardMargin;
+	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, boardMargin, controlPanel;
 	private static JButton[][] intersections = new JButton[19][19];
 	private static GridBagConstraints gbc;
 	private static JTextArea comment,timeline;
 	private static JScrollPane scroll1,scroll2;
 	private static ImageIcon black, white;
-	public static int turn;
+	private static JMenuBar menuBar,toolBar;
+	private static JMenu file, view, game,showHide;
+	private static JMenuItem New, save, saveAs, load, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score;
+	private static JLabel turnTimer;
+	public int turn;
 	public static FileManager files;
+	public ArrayList<move> memory = new ArrayList<>();
+	public move m;
 	public static void main(String[] args) {
 		new GUI();
 	}
 	
 	public GUI(){
 		super("GO");
-		setSize(1000, 700);
+		setSize(1000, 800);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
+
+		controlPanel= new JPanel(new FlowLayout(1,20,15));
+		menuBar=new JMenuBar();
+		
+		file=new JMenu("File");
+		New= new JMenuItem("New");
+		New.addActionListener(this);
+		save= new JMenuItem("Save");
+		save.addActionListener(this);
+		saveAs= new JMenuItem("Save as");
+		saveAs.addActionListener(this);
+		load= new JMenuItem("Load");
+		load.addActionListener(this);
+		exit= new JMenuItem("Exit");
+		exit.addActionListener(this);
+		file.add(New);
+		file.add(save);
+		file.add(saveAs);
+		file.add(load);
+		file.add(exit);
+		
+		menuBar.add(file);
+		
+		view=new JMenu("View");
+		showHide= new JMenu("Show/Hide");
+		coordinates = new JMenuItem("coordinates");
+		moveNum=new JMenuItem("total moves");
+		timelineButton = new JMenuItem("timeline");
+		toolbar = new JMenuItem("toolbar");
+		showHide.add(coordinates);
+		showHide.add(moveNum);
+		showHide.add(timelineButton);
+		showHide.add(toolbar);
+		view.add(showHide);
+		menuBar.add(view);
+		
+		game=new JMenu("Game");
+		tutorial= new JMenuItem("Tuturial");
+		boardSize=new JMenuItem("Board Size");
+		handicap=new JMenuItem("Handicap");
+		score = new JMenuItem("Score");
+		game.add(tutorial);
+		game.add(boardSize);
+		game.add(handicap);
+		game.add(score);
+		
+		menuBar.add(game);
+		
+		toolBar= new JMenuBar();
+		menuBar.add(toolBar);
+		
+		turnTimer = new JLabel();
+		turn = 0;
+		turnTimer.setText("Moves: " + turn);
+		
+		controlPanel.add(menuBar);
+		controlPanel.add(turnTimer);
 		
 		gameWindow = new JPanel();
 		gameWindow.setLayout(null);
@@ -92,7 +155,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		scroll2.setVisible(true);
 		timelineBox.add(scroll2);
 		
-
+		
 		c.ipady = 40;      //make this component tall
 		c.weightx = 0.5;
 		c.insets = new Insets(10,0,0,0);
@@ -100,13 +163,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		c.gridy = 1;
 		sidebar.add(timelineBox,c);
 		
-		
-		
 		sidebar.setVisible(true);
 		gameWindow.add(board);
 		//gameWindow.add(boardMargin);
 		gameWindow.add(sidebar);
-		add(gameWindow);
+		this.add(controlPanel, BorderLayout.NORTH);
+		this.add(gameWindow, BorderLayout.CENTER);
 		setVisible(true);
 		
 		files = new FileManager();
@@ -160,6 +222,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		if(e.getSource() == save) {
+			files.save(memory);
+		}
+		
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
 		String s;
@@ -167,13 +233,14 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 			for(int j = 0; j < 19; j++) {
 				
 				if(e.getSource()==intersections[i][j]) {
-					if(turn%2 == 0) {
+					if(turn%2 == 0) { //if it is black's turn
 						if(intersections[i][j].getIcon() != black && intersections[i][j].getIcon() != white) {
-							s = Character.toString((char)blackPiece);
-							intersections[i][j].setIcon(black);
+							s = Character.toString((char)blackPiece); //unicode character
+							intersections[i][j].setIcon(black); 
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
 							turn++;
+							storeMove(i, j, true);
 						}
 					}
 					else {
@@ -183,6 +250,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
 							turn++;
+							storeMove(i, j, false);
 						}
 					}
 				}
@@ -190,7 +258,17 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		}
 	}
 	
-	public void setBoard() {
+	public void storeMove(int x, int y, boolean c) {
+		m = new move(x, y, c);
+		memory.add(m);
+	}
+	public void printMemory() {
+		for(move printMove : memory) {
+			System.out.println(	printMove.getX() + ", " + printMove.getY() + " " + printMove.colour());
+		}
+	}
+	
+	public void setBoard() { //set board images
 		for(int i = 0; i < 19; i++) {
 			for(int j = 0; j < 19; j++) {
 				intersections[i][j] = new JButton();

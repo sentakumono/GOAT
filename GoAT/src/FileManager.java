@@ -24,7 +24,7 @@ public class FileManager extends JFrame implements ActionListener {
 		JTextField blackName = new JTextField(5);
 		JTextField whiteName = new JTextField(5);
 		JTextField timer = new JTextField(5);
-		JTextField komi = new JTextField(5);
+		JTextField handicap = new JTextField(5);
 			
 		JPanel p = new JPanel();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -37,18 +37,14 @@ public class FileManager extends JFrame implements ActionListener {
 		p.add(new JLabel("White Player: \n"));
 		p.add(whiteName);
 		p.add(new JLabel(" "));
-		p.add(new JLabel("Komi: "));
-		p.add(komi);
-		p.add(new JLabel(" "));
-		p.add(new JLabel("Ruleset: \n"));
-		p.add(ruleset);
-		p.add(new JLabel(" ")); //don't judge this messy code
+		p.add(new JLabel("Handicap: "));
+		p.add(handicap);
 		
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
 		if(result == JOptionPane.OK_OPTION) {
 			System.out.println("Game Name: " + name.getText());
-			System.out.println("Ruleset: " + ruleset.getText());
+			System.out.println("Ruleset: " + handicap.getText());
 			System.out.println("Black guy: " + blackName.getText());
 			System.out.println("White Guy: " + whiteName.getText());
 		}
@@ -61,7 +57,7 @@ public class FileManager extends JFrame implements ActionListener {
 		
 	}
 	
-	public void save() throws IOException {
+	public void save(ArrayList a) {
 		
 	}
 	
