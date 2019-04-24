@@ -10,9 +10,10 @@ import java.util.*;
 
 public class FileManager extends JFrame implements ActionListener {
 	private int index;
+	private String filepath;
 	
 	public FileManager() {
-		 String filepath = 	"SaveGame.txt";
+		 filepath = "SaveGame.txt";
 		 IO.createOutputFile(filepath);
 		 
 		 IO.println("(;FF[4]GM[1]SZ[19]");
@@ -43,29 +44,88 @@ public class FileManager extends JFrame implements ActionListener {
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
 		if(result == JOptionPane.OK_OPTION) {
-			System.out.println("Game Name: " + name.getText());
-			System.out.println("Ruleset: " + handicap.getText());
-			System.out.println("Black guy: " + blackName.getText());
-			System.out.println("White Guy: " + whiteName.getText());
+			IO.println("GN[" + name.getText() + "]");
+			IO.println("PB[" + blackName.getText() + "]");
+			IO.println("HA[" + handicap.getText() + "]");
+			IO.println("PW[" + whiteName.getText() + "]");
+			IO.println("KM[7.5]");
+			IO.println("RU[Chinese] \n");
 		}
 		else if (result == JOptionPane.CANCEL_OPTION) {
 			System.exit(0);
 		}
 	}
-	
-	public void load() throws IOException {
-		
+
+	public void load() throws IOException{
+		IO.closeOutputFile();
+		IO.openInputFile(filepath);
+		String line = IO.readLine();
+		char x, y; 
+		boolean c;
+		while(line != null) {
+			if(line.contains("B[")) { 
+				x = line.charAt(line.indexOf("B" + 2));
+				y = line.charAt(line.indexOf(x + 1));
+				c = true;
+				
+				
+			}
+			if(line.contains("W[")) {
+				x = line.charAt(line.indexOf("W" + 2));
+				y = line.charAt(line.indexOf(x + 1));
+			}
+		}
 	}
 	
 	public void save(ArrayList a) {
+		int x, y;
+		move o;
+		boolean c;
+		for(int i = 0; i < a.size(); i++) {
+			o = (move)a.get(i);
+			x = o.getX();
+			y = o.getY();
+			c = o.colour();
+			
+			if(c) {
+				IO.print("(;B[" + sgf(x, y) + "]");
+			}
+			else {
+				IO.println(";W[" + sgf(x, y) + "]");
+			}
+		}
+	}
+	
+	public void exit() {
+		IO.closeOutputFile();
+	}
+	
+	public void actionPerformed(ActionEvent arg0) {
 		
 	}
 	
-	public void setInput(int x, int y, String colour) {
+	public move sgfRev(char x, char y, boolean c) { 
+		int xInt, yInt;
+		xInt = (int) x;
+		xInt -= 96;
 		
-	}
+		yInt = (int) y;
+		yInt -= 96;
+		
+		move m = new move(xInt, yInt, c);
 
-	public void actionPerformed(ActionEvent arg0) {
+		return m;
+	}
+	public String sgf(int x, int y) {
+		char xChar = 'a';
+		char yChar = 'a';
 		
+		xChar += x;
+		yChar += y;
+		
+		String c = "";
+		c += xChar;
+		c += yChar;
+		return c;
 	}
 }

@@ -31,6 +31,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
 
+		files = new FileManager();
+		//Dropdown menus
 		controlPanel= new JPanel(new FlowLayout(1,20,15));
 		menuBar=new JMenuBar();
 		
@@ -88,6 +90,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		controlPanel.add(menuBar);
 		controlPanel.add(turnTimer);
 		
+		
+		//Main GUI window
 		gameWindow = new JPanel();
 		gameWindow.setLayout(null);
 		board = new JPanel(new GridLayout(19,19,0,0));
@@ -105,15 +109,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		turn = 0;
 		
 		setBoard();
-		
-		boardMargin = new JPanel();
-		boardMargin.setBounds(50, 50, 850, 850);
-		boardMargin.setBackground(new Color(181, 129, 32));
-		boardMargin.setPreferredSize(new Dimension(850, 850));
-		//addConstraint(boardMargin, board, 1, 1, 1, 1, GridBagConstraints.BOTH, GridBagConstraints.CENTER);
-		
-		
 
+		
 		gameWindow = new JPanel(new FlowLayout(1,30,40));
 		sidebar = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -226,6 +223,26 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 			files.save(memory);
 		}
 		
+		if(e.getSource() == exit) {
+			files.exit();
+			System.exit(0);
+		}
+		
+			setPiece(e);
+		
+	}
+	
+	public void storeMove(int x, int y, boolean c) {
+		m = new move(x, y, c);
+		memory.add(m);
+	}
+	public void printMemory() {
+		for(move printMove : memory) {
+			System.out.println(	printMove.getX() + ", " + printMove.getY() + " " + printMove.colour());
+		}
+	}
+	
+	public void setPiece(ActionEvent e) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
 		String s;
@@ -258,14 +275,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		}
 	}
 	
-	public void storeMove(int x, int y, boolean c) {
-		m = new move(x, y, c);
-		memory.add(m);
-	}
-	public void printMemory() {
-		for(move printMove : memory) {
-			System.out.println(	printMove.getX() + ", " + printMove.getY() + " " + printMove.colour());
-		}
+	public void setPiece(int x, int y, boolean c) {
+		
 	}
 	
 	public void setBoard() { //set board images
