@@ -54,34 +54,40 @@ public class FileManager extends JFrame implements ActionListener {
 		}
 	}
 
-	public move load() throws IOException{
+	/*
+	 * Issue:
+	 * This algorithm only checks the first instance of ;B[ in the document
+	 * - Skips white move in the same line, as it must return one object
+	 * - isn't progressing to the next line and is getting stuck in while loop in GUI
+	 */
+	public ArrayList load() throws IOException{
+		ArrayList<move> a = new ArrayList();
 		IO.openInputFile(filepath);
 		String line = IO.readLine();
-		char x, y; 
-		boolean c;
+		System.out.println(line);
 		while(line != null) {
-			if(line.contains(";B[")) { 
-				x = line.charAt(line.indexOf("B") + 2);
-				y = line.charAt(line.indexOf(x) + 1);
-				c = true;
+			System.out.println(line);
+			if(line.contains(";B[")) {
+				char x = line.charAt(line.indexOf("B") + 2);
+				char y = line.charAt(line.indexOf("B") + 3);
+				boolean c = true;
 				move m = sgfRev(x, y, c);
-				line = IO.readLine();
-				return m;
+				
+				a.add(m);
 			}
 			if(line.contains(";W[")) {
-				x = line.charAt(line.indexOf("W") + 2);
-				y = line.charAt(line.indexOf(x) + 1);
-				c = false;
+				char x = line.charAt(line.indexOf("W") + 2);
+				char y = line.charAt(line.indexOf("W") + 3);
+				boolean c = false;
 				move m = sgfRev(x, y, c);
-				line = IO.readLine();
-				return m;
+				
+				a.add(m); 
 			}
 			line = IO.readLine();
 		}
-		System.out.println("hello");
 		IO.closeInputFile();
-		move j= new move(-1, -1, false);
-		return j;
+		return a;
+		
 	}
 	
 	public void save(ArrayList a) { //appends moves made to .sgf formatted text document
@@ -106,7 +112,15 @@ public class FileManager extends JFrame implements ActionListener {
 	}
 	
 	public void exit() {
-		IO.closeOutputFile();
+		int r = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", " ", JOptionPane.OK_CANCEL_OPTION);
+		if(r == JOptionPane.OK_OPTION) {
+			try{
+				IO.closeOutputFile();
+			}catch(NullPointerException e) {
+				
+			}
+			System.exit(0);
+		}
 	}
 	
 	public void actionPerformed(ActionEvent arg0) {

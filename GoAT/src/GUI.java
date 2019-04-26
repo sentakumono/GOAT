@@ -226,24 +226,16 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 			files.save(memory);
 		}
 		if(e.getSource() == load) { //call load function
-			setBoard();
 			timeline.setText("");
-			move m;
-			try {
-				m = files.load();
-				//System.out.println(m.getX() + " " +  m.getY() + " " + m.colour());
-				while(m.getX() != -1) {
-					setPiece(m.getX(), m.getY(), m.colour());
-					m = files.load();
-				}
-			} catch (IOException e1) {
-				System.exit(0);
+			try{
+				memory = files.load();
+			}catch(IOException j){				
 			}
+			loadMove();
 		}
 		
 		if(e.getSource() == exit) { //close output file and close program
 			files.exit();
-			System.exit(0);
 		}
 		
 			setPiece(e); //otherwise place piece on index clicked
@@ -293,28 +285,25 @@ public class GUI extends JFrame implements ActionListener, MouseListener, MouseM
 		}
 	}
 	
-	public void setPiece(int x, int y, boolean c) { //manual piece setting function
-		
+	public void loadMove() {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
 		String s;
-		if(c) {
-			s = Character.toString((char)blackPiece);
-			System.out.println(x + ", " + y);
-			intersections[x][y].setIcon(black);
-			timeline.append(s);
-			timeline.append((x+1) + ", " + (y+1) + "\n");
-			turn++;
-			storeMove(x, y, c);
-		}
-		else {
-			s = Character.toString((char)whitePiece);
-			System.out.println(x + ", " + y);
-			intersections[x][y].setIcon(white);
-			timeline.append(s);
-			timeline.append((x+1) + ", " + (y+1) + "\n");
-			turn++;
-			storeMove(x, y, c);
+		for(move m : memory) {
+					if(m.colour()) {
+						s = Character.toString((char)blackPiece);
+						intersections[m.getX()][m.getY()].setIcon(black);
+						timeline.append(s);
+						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
+						turn++;
+					}
+					else if(!m.colour()) {
+						s = Character.toString((char)whitePiece);
+						intersections[m.getX()][m.getY()].setIcon(white);
+						timeline.append(s);
+						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
+						turn++;
+			}
 		}
 	}
 
