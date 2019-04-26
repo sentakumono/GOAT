@@ -14,12 +14,10 @@ public class FileManager extends JFrame implements ActionListener {
 	
 	public FileManager() {
 		 filepath = "SaveGame.txt";
-		 IO.createOutputFile(filepath);
 		 
-		 IO.println("(;FF[4]GM[1]SZ[19]");
 	}
 	
-	public void initiate() {
+	public void initiate() { //asks user for game & player information to append to file
 		JTextField name = new JTextField(5);
 		JTextField ruleset = new JTextField(5);
 		JTextField blackName = new JTextField(5);
@@ -44,40 +42,51 @@ public class FileManager extends JFrame implements ActionListener {
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
 		if(result == JOptionPane.OK_OPTION) {
-			IO.println("GN[" + name.getText() + "]");
-			IO.println("PB[" + blackName.getText() + "]");
-			IO.println("HA[" + handicap.getText() + "]");
-			IO.println("PW[" + whiteName.getText() + "]");
-			IO.println("KM[7.5]");
-			IO.println("RU[Chinese] \n");
+//			IO.println("GN[" + name.getText() + "]");
+//			IO.println("PB[" + blackName.getText() + "]");
+//			IO.println("HA[" + handicap.getText() + "]");
+//			IO.println("PW[" + whiteName.getText() + "]");
+//			IO.println("KM[7.5]");
+//			IO.println("RU[Chinese] \n");
 		}
 		else if (result == JOptionPane.CANCEL_OPTION) {
 			System.exit(0);
 		}
 	}
 
-	public void load() throws IOException{
-		IO.closeOutputFile();
+	public move load() throws IOException{
 		IO.openInputFile(filepath);
 		String line = IO.readLine();
 		char x, y; 
 		boolean c;
 		while(line != null) {
-			if(line.contains("B[")) { 
-				x = line.charAt(line.indexOf("B" + 2));
-				y = line.charAt(line.indexOf(x + 1));
+			if(line.contains(";B[")) { 
+				x = line.charAt(line.indexOf("B") + 2);
+				y = line.charAt(line.indexOf(x) + 1);
 				c = true;
-				
-				
+				move m = sgfRev(x, y, c);
+				line = IO.readLine();
+				return m;
 			}
-			if(line.contains("W[")) {
-				x = line.charAt(line.indexOf("W" + 2));
-				y = line.charAt(line.indexOf(x + 1));
+			if(line.contains(";W[")) {
+				x = line.charAt(line.indexOf("W") + 2);
+				y = line.charAt(line.indexOf(x) + 1);
+				c = false;
+				move m = sgfRev(x, y, c);
+				line = IO.readLine();
+				return m;
 			}
+			line = IO.readLine();
 		}
+		System.out.println("hello");
+		IO.closeInputFile();
+		move j= new move(-1, -1, false);
+		return j;
 	}
 	
-	public void save(ArrayList a) {
+	public void save(ArrayList a) { //appends moves made to .sgf formatted text document
+		IO.createOutputFile(filepath);
+		IO.println("(;FF[4]GM[1]SZ[19]");
 		int x, y;
 		move o;
 		boolean c;
@@ -107,13 +116,12 @@ public class FileManager extends JFrame implements ActionListener {
 	public move sgfRev(char x, char y, boolean c) { 
 		int xInt, yInt;
 		xInt = (int) x;
-		xInt -= 96;
+		xInt -= 97;
 		
 		yInt = (int) y;
-		yInt -= 96;
+		yInt -= 97;
 		
 		move m = new move(xInt, yInt, c);
-
 		return m;
 	}
 	public String sgf(int x, int y) {
