@@ -14,7 +14,7 @@ public class FileManager extends JFrame implements ActionListener {
 	private int h;
 	
 	public FileManager() {
-		 filepath = "SaveGame.txt";
+		 filepath = "SaveGame.sgf";
 		 
 	}
 	
@@ -46,8 +46,11 @@ public class FileManager extends JFrame implements ActionListener {
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
 		if(result == JOptionPane.OK_OPTION) {
+		if(name.getText().length() < 20)	
 			n = name.getText();
+		if(blackName.getText().length() < 20)
 			b = blackName.getText();
+		if(whiteName.getText().length() < 20)
 			w = whiteName.getText();
 			h = (int)handicap.getValue();
 		}
@@ -63,13 +66,13 @@ public class FileManager extends JFrame implements ActionListener {
 		while(line != null) {
 			System.out.println(line);
 			if(line.contains("GN["))  //pulls game information from save file
-				n = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+				n = line.substring(line.indexOf("GN") + 3, line.indexOf("]"));
 			if(line.contains("PB[")) 
-				b = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+				b = line.substring(line.indexOf("PB") + 3, line.indexOf("]"));
 			if(line.contains("HA[")) 
 				h = line.charAt(line.indexOf("[") + 1);
 			if(line.contains("PW[")) 
-				w = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+				w = line.substring(line.indexOf("PW") + 3, line.indexOf("]"));
 				
 			if(line.contains(";B[")) { //checks if a black move was made on this line
 				char x = line.charAt(line.indexOf("B") + 2); //takes alphabetical coordinates
