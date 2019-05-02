@@ -11,7 +11,8 @@ public class GUI extends JFrame implements ActionListener {
 	private JButton[][] intersections = new JButton[19][19];
 	private static JTextArea comment, timeline;
 	private static JScrollPane scroll1, scroll2;
-	private static ImageIcon black, white;
+	private static ImageIcon center,star,black,white;
+	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
 	private static JMenuBar menuBar,toolBar;
 	private static JMenu file, view, game,showHide;
 	private static JMenuItem newGame, save, saveAs, load, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info;
@@ -21,6 +22,7 @@ public class GUI extends JFrame implements ActionListener {
 	public ArrayList<move> memory = new ArrayList<>();
 	public move m;
 	public boolean isInit = false;
+	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
 	}
@@ -106,8 +108,27 @@ public class GUI extends JFrame implements ActionListener {
 		board.setBackground(new Color(181,129,32));
 		board.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		
+		center = new ImageIcon("PieceIcons/center.jpg");
+		star = new ImageIcon("PieceIcons/star.jpg");
 		black = new ImageIcon("PieceIcons/blackCenter.jpg");
 		white = new ImageIcon("PieceIcons/whiteCenter.jpg");
+		
+		corners = new ImageIcon[4];
+		sides= new ImageIcon[4];
+		blackCorners=new ImageIcon[4];
+		whiteCorners=new ImageIcon[4];
+		blackSides=new ImageIcon[4];
+		whiteSides=new ImageIcon[4];
+		
+		for(int i=0;i<4;i++) {
+			corners[i]= new ImageIcon("PieceIcons/corner"+ (i+1) +".jpg");
+			sides[i]= new ImageIcon("PieceIcons/side"+ (i+1) +".jpg");
+			blackCorners[i]= new ImageIcon("PieceIcons/blackCorner"+ (i+1) +".jpg");
+			whiteCorners[i]= new ImageIcon("PieceIcons/whiteCorner"+ (i+1) +".jpg");
+			blackSides[i]= new ImageIcon("PieceIcons/blackSide"+ (i+1) +".jpg");
+			whiteSides[i]= new ImageIcon("PieceIcons/whiteSide"+ (i+1) +".jpg");
+		}
+		
 		
 		turn = 0;
 		
@@ -264,29 +285,49 @@ public class GUI extends JFrame implements ActionListener {
 	public void setPiece(ActionEvent e) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
-		String s;
+		String s = "";
+		boolean c = true;
 		for(int i=0;i<19;i++) { 
 			for(int j = 0; j < 19; j++) {
-				
-				if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
-					if(turn%2 == 0) { //if it is black's turn
-						if(intersections[i][j].getIcon() != black && intersections[i][j].getIcon() != white) {
+				if(emptyGrid(i, j)) {				
+					if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
+						if(turn%2 == 0) { //if it is black's turn
 							s = Character.toString((char)blackPiece); //unicode character
-							intersections[i][j].setIcon(black); 
-							timeline.append(s);
-							timeline.append((i+1) + ", " + (j+1) + "\n");
-							turn++;
-							storeMove(i, j, true);
+							addBlackPiece(i, j);
+							c = true;
 						}
-					}
-					else {			  //if it is white's turn
-						if(intersections[i][j].getIcon() != black && intersections[i][j].getIcon() != white) {
+						else {			  //if it is white's turn
 							s = Character.toString((char)whitePiece);
-							intersections[i][j].setIcon(white);
+							addWhitePiece(i, j);
+							c = false;
+						}
+						
+						resetChecked();
+						if(getColor(i-1,j)==turn%2&&!hasLiberty(i-1,j,turn%2))
+							eatPieces(i-1,j,turn%2);
+						
+						resetChecked();
+						if(getColor(i+1,j)==turn%2&&!hasLiberty(i+1,j,turn%2)) 
+							eatPieces(i+1,j,turn%2);
+						
+						resetChecked();
+						if(getColor(i,j-1)==turn%2&&!hasLiberty(i,j-1,turn%2)) 
+							eatPieces(i,j-1,turn%2);
+						
+						resetChecked();
+						if(getColor(i,j+1)==turn%2&&!hasLiberty(i,j+1,turn%2)) 
+							eatPieces(i,j+1,turn%2);
+						
+						resetChecked();
+						
+						if(!hasLiberty(i, j, turn%2)) {
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
 							turn++;
-							storeMove(i, j, false);
+							storeMove(i, j, c);
+						}
+						else {
+							setEmpty(i, j);
 						}
 					}
 				}
@@ -301,14 +342,14 @@ public class GUI extends JFrame implements ActionListener {
 		for(move m : memory) {
 					if(m.colour()) {
 						s = Character.toString((char)blackPiece);
-						intersections[m.getX()][m.getY()].setIcon(black);
+						addBlackPiece(m.getX(), m.getY());
 						timeline.append(s);
 						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
 						turn++;
 					}
 					else if(!m.colour()) {
 						s = Character.toString((char)whitePiece);
-						intersections[m.getX()][m.getY()].setIcon(white);
+						addWhitePiece(m.getX(), m.getY());
 						timeline.append(s);
 						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
 						turn++;
@@ -324,48 +365,48 @@ public class GUI extends JFrame implements ActionListener {
 				}
 				if(i == 0) {
 					if(j == 0) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner1.jpg"));
+						intersections[i][j].setIcon(corners[0]);
 					}
 					else if (j == 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner2.jpg"));
+						intersections[i][j].setIcon(corners[1]);
 					}
 					else {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/top.jpg"));
+						intersections[i][j].setIcon(sides[2]);
 					}
 				}
 				
 				else if (i == 18) {
 					if(0 < j && j < 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/bottom.jpg"));
+						intersections[i][j].setIcon(sides[3]);
 					}
 					if(j == 0) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner3.jpg"));
+						intersections[i][j].setIcon(corners[2]);
 					}
 					if(j == 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/corner4.jpg"));
+						intersections[i][j].setIcon(corners[3]);
 					}
 				}
 				
 				else if(j == 0) {
 					if(0 < i && i < 18) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/left.jpg"));
+						intersections[i][j].setIcon(sides[0]);
 					}
 				}
 				else if(j == 18) {
 					if(0 < i && i < 18	) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/right.jpg"));
+						intersections[i][j].setIcon(sides[1]);
 					}
 				}
 				else if ( i == 3 || i == 9 || i == 15) {
 					if(j == 3 || j == 9 || j == 15) {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/star.jpg"));
+						intersections[i][j].setIcon(star);
 					}
 					else {
-						intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+						intersections[i][j].setIcon(center);
 					}
 				}
 				else {
-					intersections[i][j].setIcon(new ImageIcon("PieceIcons/center.jpg"));
+					intersections[i][j].setIcon(center);
 				}
 				
 				
@@ -415,5 +456,212 @@ public class GUI extends JFrame implements ActionListener {
 		turn = 0;
 	}
 
+	public void resetChecked() {
+		for(int i=0;i<19;i++) {
+			for(int j=0;j<19;j++) {
+				checked[i][j]=false;
+			}
+		}
+	}
+	
+
+	public boolean hasLiberty(int i, int j, int type) {
+		
+		if(i<0||j<0||j>18||j>18) 
+			return false;
+		if(emptyGrid(i,j)) 
+			return true;
+		if(getColor(i,j)!=type) 
+			return false;
+		checked[i][j]=true;
+		 if(i > 0 &&!checked[i-1][j]&& hasLiberty(i-1, j,type)) 
+			 return true;  
+		    else if(i < 18 && !checked[i+1][j]&&hasLiberty(i+1, j,type)) 
+		    	return true; 
+		    else if(j > 0 &&!checked[i][j-1]&&  hasLiberty(i, j-1,type)) 
+		    	return true;  
+		    else if(j < 18 &&!checked[i][j+1]&& hasLiberty(i, j+1,type)) 
+		    	return true;  
+		    else return false;  
+	}
+	
+
+	public void eatPieces(int i, int j, int type)  {  
+	 if(getColor(i,j)!=type||i<0||i>18||j<0||j>18) 
+	 	return;
+	 
+	    setEmpty(i,j);
+	   
+	    if(i >= 0) 
+	    	eatPieces(i-1, j, type);  
+	    if(i <= 18) 
+	    	eatPieces(i+1, j,type); 
+	    if(j >= 0) 
+	    	eatPieces(i, j-1,type);  
+	    if(j <= 18) 
+	    	eatPieces(i, j+1,type); 
+	}  
+
+	public boolean black(int i, int j) {
+		boolean isBlack=false;
+		Icon icon=intersections[i][j].getIcon();
+		if(icon == black) {
+			isBlack=true;
+		}
+		for(int p=0;p<4;p++) {
+			if(icon.equals(blackCorners[p])||icon.equals(blackSides[p])) {
+				isBlack=true;
+				break;
+			}
+		}
+		return isBlack;
+	}
+	
+	public boolean white(int i, int j) {
+		boolean isWhite=false;
+		Icon icon=intersections[i][j].getIcon();
+		if(icon == white) {
+			isWhite=true;
+		}
+		for(int p=0;p<4;p++) {
+			if(icon.equals(whiteCorners[p])||icon.equals(whiteSides[p])) {
+			
+				isWhite=true;
+				break;
+			}
+		}
+		return isWhite;
+	}
+	public int getColor(int i, int j) {
+		if(i>=0&&i<=18&&j>=0&&j<=18)  {
+			if(black(i,j)) 
+					return 1;
+			else if(white(i,j)) 
+					return 0;
+			else
+				return -1;
+		}
+		else return -1;
+	}
+	public boolean emptyGrid(int i, int j) {
+		boolean empty=false;
+		Icon icon=intersections[i][j].getIcon();
+		for(int p=0;p<4;p++)
+			if(icon.equals(corners[p])||icon.equals(sides[p])) 
+				empty=true;
+			
+		if(icon.equals(center)) 
+			empty=true;
+		else if(icon.equals(star)) 
+			empty=true;
+		return empty;
+	}
+	
+	public void addBlackPiece(int i,int j) {
+		if(i==0&&j==0) {
+			intersections[i][j].setIcon(blackCorners[0]);
+			}
+			else if(i==0&&j==18) {
+				intersections[i][j].setIcon(blackCorners[1]);
+			}
+			else if(i==0) {
+				intersections[i][j].setIcon(blackSides[2]);
+			}
+			else if(j==0&&0 < i && i < 18) {
+				intersections[i][j].setIcon(blackSides[0]);
+			}
+			else if(j==18&&0 < i && i < 18) {
+				intersections[i][j].setIcon(blackSides[1]);
+			}
+			else if(i==18&&j==0) {
+				intersections[i][j].setIcon(blackCorners[2]);
+			}
+			else if(i==18&&j==18) {
+				intersections[i][j].setIcon(blackCorners[3]);
+			}
+			else if(i==18) {
+				intersections[i][j].setIcon(blackSides[3]);
+			}
+			else {
+			intersections[i][j].setIcon(black);
+			}
+	}
+	public void addWhitePiece(int i, int j) {
+		if(i==0&&j==0) {
+			intersections[i][j].setIcon(whiteCorners[0]);
+			}
+			else if(i==0&&j==18) {
+				intersections[i][j].setIcon(whiteCorners[1]);
+			}
+			else if(i==0) {
+				intersections[i][j].setIcon(whiteSides[2]);
+			}
+			else if(j==0&&0 < i && i < 18) {
+				intersections[i][j].setIcon(whiteSides[0]);
+			}
+			else if(j==18&&0 < i && i < 18) {
+				intersections[i][j].setIcon(whiteSides[1]);
+			}
+			else if(i==18&&j==0) {
+				intersections[i][j].setIcon(whiteCorners[2]);
+			}
+			else if(i==18&&j==18) {
+				intersections[i][j].setIcon(whiteCorners[3]);
+			}
+			else if(i==18) {
+				intersections[i][j].setIcon(whiteSides[3]);
+			}
+			else {
+			intersections[i][j].setIcon(white);
+			}
+	}
+	public void setEmpty(int i, int j) {
+		if(i == 0) {
+			if(j == 0) {
+				intersections[i][j].setIcon(corners[0]);
+			}
+			else if (j == 18) {
+				intersections[i][j].setIcon(corners[1]);
+			}
+			else {
+				intersections[i][j].setIcon(sides[2]);
+			}
+		}
+		
+		else if (i == 18) {
+			if(0 < j && j < 18) {
+				intersections[i][j].setIcon(sides[3]);
+			}
+			if(j == 0) {
+				intersections[i][j].setIcon(corners[2]);
+			}
+			if(j == 18) {
+				intersections[i][j].setIcon(corners[3]);
+			}
+		}
+		
+		else if(j == 0) {
+			if(0 < i && i < 18) {
+				intersections[i][j].setIcon(sides[0]);
+			}
+		}
+		else if(j == 18) {
+			if(0 < i && i < 18	) {
+				intersections[i][j].setIcon(sides[1]);
+			}
+		}
+		else if ( i == 3 || i == 9 || i == 15) {
+			if(j == 3 || j == 9 || j == 15) {
+				intersections[i][j].setIcon(star);
+			}
+			else {
+				intersections[i][j].setIcon(center);
+			}
+		}
+		else {
+			intersections[i][j].setIcon(center);
+		}
+	}
+	
 
 }
