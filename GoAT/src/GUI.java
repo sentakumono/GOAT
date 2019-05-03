@@ -9,6 +9,7 @@ public class GUI extends JFrame implements ActionListener {
 
 	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, controlPanel;
 	private JButton[][] intersections = new JButton[19][19];
+	private JButton undo, redo;
 	private static JTextArea comment, timeline;
 	private static JScrollPane scroll1, scroll2;
 	private static ImageIcon center,star,black,white;
@@ -20,6 +21,7 @@ public class GUI extends JFrame implements ActionListener {
 	public int turn;
 	public static FileManager files;
 	public ArrayList<move> memory = new ArrayList<>();
+	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
 	public boolean isInit = false;
 	public static boolean[][] checked=new boolean[19][19];
@@ -162,7 +164,7 @@ public class GUI extends JFrame implements ActionListener {
 		sidebar.add(commentBox,c);
 		
 		timelineBox = new JPanel();
-		timelineBox.setPreferredSize(new Dimension(300,375));
+		timelineBox.setPreferredSize(new Dimension(300,400));
 		timelineBox.setVisible(true);
 		timelineBox.setBackground(Color.WHITE);
 		timelineBox.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -174,6 +176,24 @@ public class GUI extends JFrame implements ActionListener {
 		scroll2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scroll2.setVisible(true);
 		timelineBox.add(scroll2);
+		
+		undo = new JButton();
+		undo.setPreferredSize(new Dimension(25, 25));
+		undo.setBorder(BorderFactory.createEmptyBorder());
+		undo.addActionListener(this);
+		int undoArrow = 8630;
+		char u = (char) undoArrow;
+		undo.setText(Character.toString(u));
+		timelineBox.add(undo);
+		
+		redo = new JButton();
+		redo.setPreferredSize(new Dimension(25, 25));
+		redo.setBorder(BorderFactory.createEmptyBorder());
+		redo.addActionListener(this);
+		int redoArrow = 8631;
+		char r = (char) redoArrow;
+		redo.setText(Character.toString(r));
+		timelineBox.add(redo);
 		
 		c.ipady = 40;      //make this component tall
 		c.weightx = 0.5;
@@ -263,7 +283,13 @@ public class GUI extends JFrame implements ActionListener {
 			p.add(new JLabel("Rules: Chinese"));
 			JOptionPane.showMessageDialog(null, p, "Game Info", JOptionPane.PLAIN_MESSAGE);
 		}
-		
+		if(e.getSource() == undo) {
+			undo();
+		}
+		if(e.getSource() == redo) {
+			redo();
+		}
+		 
 		if(e.getSource() == exit) { //close output file and close program
 			files.exit();
 		}
@@ -320,7 +346,7 @@ public class GUI extends JFrame implements ActionListener {
 						
 						resetChecked();
 						
-						if(!hasLiberty(i, j, turn%2)) {
+						if(hasLiberty(i, j, 1-turn%2)) {
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
 							turn++;
@@ -335,28 +361,82 @@ public class GUI extends JFrame implements ActionListener {
 		}
 	}
 	
-	public void loadMove() {
+	public void setPiece(int i, int j, boolean c) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
-		String s;
-		for(move m : memory) {
-					if(m.colour()) {
-						s = Character.toString((char)blackPiece);
-						addBlackPiece(m.getX(), m.getY());
-						timeline.append(s);
-						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
-						turn++;
-					}
-					else if(!m.colour()) {
-						s = Character.toString((char)whitePiece);
-						addWhitePiece(m.getX(), m.getY());
-						timeline.append(s);
-						timeline.append((m.getX()+1) + ", " + (m.getY()+1) + "\n");
-						turn++;
+		String s = "";
+		if(c) { //if it is black's turn
+			s = Character.toString((char)blackPiece); //unicode character
+			addBlackPiece(i, j);
+			c = true;
+		}
+		else {			  //if it is white's turn
+			s = Character.toString((char)whitePiece);
+			addWhitePiece(i, j);
+			c = false;
+		}
+		resetChecked();
+		if(getColor(i-1,j)==turn%2&&!hasLiberty(i-1,j,turn%2))
+			eatPieces(i-1,j,turn%2);
+		
+		resetChecked();
+		if(getColor(i+1,j)==turn%2&&!hasLiberty(i+1,j,turn%2)) 
+			eatPieces(i+1,j,turn%2);
+		
+		resetChecked();
+		if(getColor(i,j-1)==turn%2&&!hasLiberty(i,j-1,turn%2)) 
+			eatPieces(i,j-1,turn%2);
+		
+		resetChecked();
+		if(getColor(i,j+1)==turn%2&&!hasLiberty(i,j+1,turn%2)) 
+			eatPieces(i,j+1,turn%2);
+		
+		resetChecked();
+		
+		if(hasLiberty(i, j, 1-turn%2)) {
+			timeline.append(s);
+			timeline.append((i+1) + ", " + (j+1) + "\n");
+			turn++;
+		}
+		else {
+			setEmpty(i, j);
+		}
+	}
+	
+	public void loadMove() {
+		for(move m : memory) { //foreach loop to iterate on every move element
+			if(m.colour()) {
+				setPiece(m.getX(), m.getY(), m.colour());
+				
+			}
+			else {
+				setPiece(m.getX(), m.getY(), m.colour());
 			}
 		}
 	}
 
+	public void undo() {
+		if(!memory.isEmpty()) {
+			turn = 0;
+			undoMove.add(memory.get(memory.size()-1));
+			memory.remove(memory.size()-1);
+			timeline.setText("");
+			setBoard();
+			loadMove();
+		}
+	}
+	
+	public void redo() {
+		turn = 0;
+		if(!undoMove.isEmpty()) {
+			memory.add(undoMove.get(undoMove.size()-1));
+			undoMove.remove(undoMove.size()-1);
+			timeline.setText("");
+			setBoard();
+			loadMove();
+		}
+	}
+	
 	public void setBoard() { //Initializing board objects & icons
 		for(int i = 0; i < 19; i++) {
 			for(int j = 0; j < 19; j++) {
