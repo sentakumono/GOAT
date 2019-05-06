@@ -23,7 +23,7 @@ public class GUI extends JFrame implements ActionListener {
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
-	public boolean isInit = false;
+	public boolean isInit = false, setHandicap = false;
 	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
@@ -404,19 +404,18 @@ public class GUI extends JFrame implements ActionListener {
 	}
 	
 	public void loadMove() {
+		for(int i = 0; i < files.getH(); i++) {
+			turn = 0;
+			setPiece(memory.get(i).getX(), memory.get(i).getY(), memory.get(i).colour());
+		}
 		for(move m : memory) { //foreach loop to iterate on every move element
-			if(m.colour()) {
+			if(memory.indexOf(m) >= files.getH())
 				setPiece(m.getX(), m.getY(), m.colour());
-				
-			}
-			else {
-				setPiece(m.getX(), m.getY(), m.colour());
-			}
 		}
 	}
 
 	public void undo() {
-		if(!memory.isEmpty()) {
+		if(!memory.isEmpty() && memory.size() -1 >= files.getH()) {
 			turn = 0;
 			undoMove.add(memory.get(memory.size()-1));
 			memory.remove(memory.size()-1);
@@ -424,11 +423,11 @@ public class GUI extends JFrame implements ActionListener {
 			setBoard();
 			loadMove();
 		}
-	}
+	}	
 	
 	public void redo() {
-		turn = 0;
 		if(!undoMove.isEmpty()) {
+			turn = 0;
 			memory.add(undoMove.get(undoMove.size()-1));
 			undoMove.remove(undoMove.size()-1);
 			timeline.setText("");
@@ -507,33 +506,25 @@ public class GUI extends JFrame implements ActionListener {
 				memory.add(new move(3, 3, true));
 				memory.add(new move(15, 15, true));
 			}
-			if(i == 2) {
+			if(i == 2) 
 				memory.add(new move(3, 15, true));
-			}
-			if(i == 3) {
+			if(i == 3) 
 				memory.add(new move(15, 3, true));
-			}
-			if(i == 4) {
+			if(i == 4) 
 				memory.add(new move(9, 9, true));
-			}
 			if(i == 5) {
 				memory.remove(4);
 				memory.add(new move(9, 3, true));
 				memory.add(new move(9, 15, true));
 			}
-			if(i == 6) {
+			if(i == 6) 
 				memory.add(new move(3, 9, true));
-			}
-			if(i == 7 ) {
+			if(i == 7 ) 
 				memory.add(new move(15, 9, true));
-			}
-			if(i == 8) {
+			if(i == 8) 
 				memory.add(new move(9, 9, true));
-			}
 		}
-		
 		loadMove();
-		turn = 0;
 	}
 
 	public void resetChecked() {
