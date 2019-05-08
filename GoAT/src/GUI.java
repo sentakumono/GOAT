@@ -7,10 +7,11 @@ import java.io.IOException;
 
 public class GUI extends JFrame implements ActionListener {
 
-	private static JPanel gameWindow, board, commentBox, sidebar,timelineBox, controlPanel;
+	private static JPanel gameWindow, board, commentPanel, sidebar,timelineBox, controlPanel;
 	private JButton[][] intersections = new JButton[19][19];
-	private JButton undo, redo;
-	private static JTextArea comment, timeline;
+	private JButton undo, redo, commentButton;
+	private JTextField commentInput, commentDisplay;
+	private static JTextArea timeline;
 	private static JScrollPane scroll1, scroll2;
 	private static ImageIcon center,star,black,white;
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
@@ -23,7 +24,7 @@ public class GUI extends JFrame implements ActionListener {
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
-	public boolean isInit = false, setHandicap = false;
+	public boolean isInit = false, hasUndone = false;
 	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
@@ -34,9 +35,7 @@ public class GUI extends JFrame implements ActionListener {
 		setSize(1000, 800);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
- 
-	
-		files = new FileManager();
+		
 		//Dropdown menus
 		controlPanel= new JPanel(new FlowLayout(1,20,15));
 		menuBar=new JMenuBar();
@@ -131,37 +130,45 @@ public class GUI extends JFrame implements ActionListener {
 			whiteSides[i]= new ImageIcon("PieceIcons/whiteSide"+ (i+1) +".jpg");
 		}
 		
-		
 		turn = 0;
-		
 		
 		gameWindow = new JPanel(new FlowLayout(1,30,40));
 		sidebar = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 
+		
 		//timeline and comments text fields
-		commentBox = new JPanel();
-		commentBox.setPreferredSize(new Dimension(300,175));
-		commentBox.setVisible(true);
-		commentBox.setBackground(Color.WHITE);
-		commentBox.setBorder(BorderFactory.createLineBorder(Color.black));
-		comment = new JTextArea(10,25);
-		comment.setEditable(true);
-		comment.setVisible(true);
-		scroll1 = new JScrollPane(comment);
+		commentPanel = new JPanel();
+		commentPanel.setPreferredSize(new Dimension(300, 125));
+		commentPanel.setVisible(true);
+		commentPanel.setBackground(Color.WHITE);
+		commentPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		
-		scroll1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		commentDisplay = new JTextField(25
+				);
+		commentDisplay.setHorizontalAlignment(JTextField.CENTER);
+		commentDisplay.setEditable(false);
+		commentDisplay.setBorder(BorderFactory.createTitledBorder("Comment"));
+		commentPanel.add(commentDisplay);
+		commentInput = new JTextField(25);
+		commentInput.setEditable(true);
+		commentInput.setVisible(true);
+		commentPanel.add(commentInput);
 		
-		scroll1.setVisible(true);
-		commentBox.add(scroll1);
+		commentButton = new JButton();
+		commentButton.setPreferredSize(new Dimension(125, 25));
+		commentButton.setBorder(BorderFactory.createBevelBorder(0));
+		commentButton.addActionListener(this);
+		commentButton.setText("Add Comment");
+		commentPanel.add(commentButton);
 		
 		c.weightx = 0.5;
 	
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
-		sidebar.add(commentBox,c);
+		sidebar.add(commentPanel,c);
 		
 		timelineBox = new JPanel();
 		timelineBox.setPreferredSize(new Dimension(300,400));
@@ -177,9 +184,10 @@ public class GUI extends JFrame implements ActionListener {
 		scroll2.setVisible(true);
 		timelineBox.add(scroll2);
 		
+		//undo and redo buttons
 		undo = new JButton();
 		undo.setPreferredSize(new Dimension(25, 25));
-		undo.setBorder(BorderFactory.createEmptyBorder());
+		undo.setBorder(BorderFactory.createBevelBorder(0));
 		undo.addActionListener(this);
 		int undoArrow = 8630;
 		char u = (char) undoArrow;
@@ -188,13 +196,14 @@ public class GUI extends JFrame implements ActionListener {
 		
 		redo = new JButton();
 		redo.setPreferredSize(new Dimension(25, 25));
-		redo.setBorder(BorderFactory.createEmptyBorder());
+		redo.setBorder(BorderFactory.createBevelBorder(0));
 		redo.addActionListener(this);
 		int redoArrow = 8631;
 		char r = (char) redoArrow;
 		redo.setText(Character.toString(r));
 		timelineBox.add(redo);
 		
+		//dimensions of timeline panel
 		c.ipady = 40;      //make this component tall
 		c.weightx = 0.5;
 		c.insets = new Insets(10,0,0,0);
@@ -202,15 +211,16 @@ public class GUI extends JFrame implements ActionListener {
 		c.gridy = 1;
 		sidebar.add(timelineBox,c);
 
+		//initialize game information 
 		files = new FileManager();
 		files.initiate();		
 		
+		//initialize board
 		setBoard();
-		setHandicap(files.getH());
+		setHandicap(files.getHA());
 		
 		sidebar.setVisible(true);
 		gameWindow.add(board);
-		//gameWindow.add(boardMargin);
 		gameWindow.add(sidebar);
 		this.add(controlPanel, BorderLayout.NORTH);
 		this.add(gameWindow, BorderLayout.CENTER);
@@ -219,75 +229,68 @@ public class GUI extends JFrame implements ActionListener {
 
 	}
 	
-	public void mouseDragged(MouseEvent e) {
-
-		
-	}
-
-	public void mouseMoved(MouseEvent e) {
-	}
-		
-	public void mouseClicked(MouseEvent e) {
-	}
-
-	public void mouseEntered(MouseEvent e) {
-	}
-
-	public void mouseExited(MouseEvent e) {
-	
-	}
-
-	public void mousePressed(MouseEvent e) {
-		//printQuadrant(e);
-	}
-
-	public void mouseReleased(MouseEvent e) {
-
-		
-	}
  
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == save) { //call save function
+		if(e.getSource() == save) { //User saves game
 			files.save(memory);
 		}
-		if(e.getSource() == load) { //call load function
+		if(e.getSource() == load) { //User loads save game
 			timeline.setText("");
 			try{
 				memory = files.load();
 			}catch(IOException j){				
 			}
+			undoMove.clear();
 			setBoard();
 			turn = 0;
 			loadMove();
 			
 		}
-		if(e.getSource() == newGame) {
+		if(e.getSource() == newGame) { //User restarts game
 			memory.clear();
+			undoMove.clear();
+			commentInput.setText("");
+			commentDisplay.setText("");
 			timeline.setText("");
 			turnTimer.setText("Moves: 0");
 			turn = 0;
 			setBoard();
+			
 			files = new FileManager();
 			files.initiate();
-			setHandicap(files.getH());
+			setHandicap(files.getHA());
 		}
 		
-		if(e.getSource() == info) {
+		if(e.getSource() == info) { //User opens game info menu
 			JPanel p = new JPanel();
 			p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-			p.add(new JLabel("Game Name: " + files.getN()));
-			p.add(new JLabel("Black Player Name: " + files.getB()));
-			p.add(new JLabel("Handicap: " + files.getH()));
-			p.add(new JLabel("White Player Name: " + files.getW()));
+			p.add(new JLabel("Game Name: " + files.getGN()));
+			p.add(new JLabel("Black Player Name: " + files.getBN()));
+			p.add(new JLabel("Handicap: " + files.getHA()));
+			p.add(new JLabel("White Player Name: " + files.getWN()));
 			p.add(new JLabel("Komi: 7.5"));
 			p.add(new JLabel("Rules: Chinese"));
 			JOptionPane.showMessageDialog(null, p, "Game Info", JOptionPane.PLAIN_MESSAGE);
 		}
+		
 		if(e.getSource() == undo) {
 			undo();
+			hasUndone = true;
 		}
+		
 		if(e.getSource() == redo) {
 			redo();
+		}
+		if(e.getSource() == commentButton) {
+			if(commentInput.getText() != null) {
+				String com = commentInput.getText();
+				if(com.contains("]")) {
+					commentDisplay.setText("Invalid Comment!");
+				}
+				else if(!memory.isEmpty())  {
+					memory.get(memory.size()-1).addComment(com);
+				}
+			}
 		}
 		 
 		if(e.getSource() == exit) { //close output file and close program
@@ -297,15 +300,14 @@ public class GUI extends JFrame implements ActionListener {
 		turnTimer.setText("Moves: " + turn);
 	}
 	
-	public void storeMove(int x, int y, boolean c) { //store move made into memory
+	//store move made into memory
+	public void storeMove(int x, int y, boolean c) { 
  		m = new move(x, y, c);
 		memory.add(m); 
 	}
 	
-	public void printMemory() {
-		for(move printMove : memory) {
-			System.out.println(	printMove.getX() + ", " + printMove.getY() + " " + printMove.colour());
-		}
+	public void readComment() {
+		
 	}
 	
 	public void setPiece(ActionEvent e) {
@@ -347,10 +349,16 @@ public class GUI extends JFrame implements ActionListener {
 						resetChecked();
 						
 						if(hasLiberty(i, j, 1-turn%2)) {
+							commentDisplay.setText("");
+							commentInput.setText("");
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
 							turn++;
 							storeMove(i, j, c);
+							if(hasUndone) { //if a move is made after an undo, override the moves made previously
+								undoMove.clear();
+								hasUndone = false;
+							}
 						}
 						else {
 							setEmpty(i, j);
@@ -361,6 +369,7 @@ public class GUI extends JFrame implements ActionListener {
 		}
 	}
 	
+	//override method to manually place pieces using coordinates and colour
 	public void setPiece(int i, int j, boolean c) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
@@ -394,8 +403,17 @@ public class GUI extends JFrame implements ActionListener {
 		resetChecked();
 		
 		if(hasLiberty(i, j, 1-turn%2)) {
+			commentDisplay.setText("");
+			commentInput.setText("");
+			
+			String com = "";
+			if(!memory.isEmpty()) {
+				com = memory.get(memory.size()-1).getComment();
+			}
+			commentDisplay.setText(com);
 			timeline.append(s);
 			timeline.append((i+1) + ", " + (j+1) + "\n");
+
 			turn++;
 		}
 		else {
@@ -403,19 +421,21 @@ public class GUI extends JFrame implements ActionListener {
 		}
 	}
 	
+	//loads handicap and moves made from memory
 	public void loadMove() {
-		for(int i = 0; i < files.getH(); i++) {
+		for(int i = 0; i < files.getHA(); i++) {
 			turn = 0;
 			setPiece(memory.get(i).getX(), memory.get(i).getY(), memory.get(i).colour());
 		}
 		for(move m : memory) { //foreach loop to iterate on every move element
-			if(memory.indexOf(m) >= files.getH())
+			if(memory.indexOf(m) >= files.getHA())
 				setPiece(m.getX(), m.getY(), m.colour());
 		}
 	}
 
+	//undoes the last move made
 	public void undo() {
-		if(!memory.isEmpty() && memory.size() -1 >= files.getH()) {
+		if(!memory.isEmpty() && memory.size() -1 >= files.getHA()) {
 			turn = 0;
 			undoMove.add(memory.get(memory.size()-1));
 			memory.remove(memory.size()-1);
@@ -425,6 +445,7 @@ public class GUI extends JFrame implements ActionListener {
 		}
 	}	
 	
+	//re-does the last move made
 	public void redo() {
 		if(!undoMove.isEmpty()) {
 			turn = 0;
@@ -500,6 +521,7 @@ public class GUI extends JFrame implements ActionListener {
 		isInit = true;
 	}
 	
+	//adds handicap pieces to memory
 	public void setHandicap(int h) {
 		for(int i = 0; i < h; i++) {
 			if(i == 1) {
@@ -535,7 +557,7 @@ public class GUI extends JFrame implements ActionListener {
 		}
 	}
 	
-
+	//checks if a piece or group of pieces has open liberties
 	public boolean hasLiberty(int i, int j, int type) {
 		
 		if(i<0||j<0||j>18||j>18) 
@@ -556,7 +578,7 @@ public class GUI extends JFrame implements ActionListener {
 		    else return false;  
 	}
 	
-
+	//removes pieces if they do not have liberties
 	public void eatPieces(int i, int j, int type)  {  
 	 if(getColor(i,j)!=type||i<0||i>18||j<0||j>18) 
 	 	return;
@@ -573,6 +595,7 @@ public class GUI extends JFrame implements ActionListener {
 	    	eatPieces(i, j+1,type); 
 	}  
 
+	//check if a given piece is black
 	public boolean black(int i, int j) {
 		boolean isBlack=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -588,6 +611,7 @@ public class GUI extends JFrame implements ActionListener {
 		return isBlack;
 	}
 	
+	//check if a given piece is white
 	public boolean white(int i, int j) {
 		boolean isWhite=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -603,6 +627,7 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		return isWhite;
 	}
+	
 	public int getColor(int i, int j) {
 		if(i>=0&&i<=18&&j>=0&&j<=18)  {
 			if(black(i,j)) 
@@ -614,6 +639,7 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		else return -1;
 	}
+	//check if the given grid space is empty
 	public boolean emptyGrid(int i, int j) {
 		boolean empty=false;
 		Icon icon=intersections[i][j].getIcon();
@@ -628,6 +654,7 @@ public class GUI extends JFrame implements ActionListener {
 		return empty;
 	}
 	
+	//adds black piece based on location on board
 	public void addBlackPiece(int i,int j) {
 		if(i==0&&j==0) {
 			intersections[i][j].setIcon(blackCorners[0]);
@@ -657,6 +684,7 @@ public class GUI extends JFrame implements ActionListener {
 			intersections[i][j].setIcon(black);
 			}
 	}
+	
 	public void addWhitePiece(int i, int j) {
 		if(i==0&&j==0) {
 			intersections[i][j].setIcon(whiteCorners[0]);

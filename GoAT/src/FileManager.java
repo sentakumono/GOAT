@@ -10,17 +10,16 @@ import java.util.*;
 
 public class FileManager extends JFrame implements ActionListener {
 	private int index;
-	private String filepath, n, b, w;
-	private int h;
+	private String filepath, gn, bn, wn;
+	private int ha;
 	
 	public FileManager() {
-		 filepath = "SaveGame.sgf";
+		 filepath = "SaveGame.txt";
 		 
 	}
 	
 	public void initiate() { //asks user for game & player information to append to file
 		JTextField name = new JTextField(4);
-		JTextField ruleset = new JTextField(4);
 		JTextField blackName = new JTextField(4);
 		JTextField whiteName = new JTextField(4);
 		JTextField timer = new JTextField(4);
@@ -40,39 +39,40 @@ public class FileManager extends JFrame implements ActionListener {
 		p.add(handicap);
 		p.add(new JLabel(" "));
 		p.add(new JLabel("White Player: \n"));
-		p.add(whiteName);
-		
+		p.add(whiteName);		
 		
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
 		if(result == JOptionPane.OK_OPTION) {
-		if(name.getText().length() < 20)	
-			n = name.getText();
-		if(blackName.getText().length() < 20)
-			b = blackName.getText();
-		if(whiteName.getText().length() < 20)
-			w = whiteName.getText();
-			h = (int)handicap.getValue();
+			if(name.getText().length() < 20)	
+				gn = name.getText();
+			if(blackName.getText().length() < 20)
+				bn = blackName.getText();
+			if(whiteName.getText().length() < 20)
+				wn = whiteName.getText();
+			ha = (int)handicap.getValue();
 		}
 		else if (result == JOptionPane.CANCEL_OPTION) {
 			System.exit(0);
 		}
 	}
 
-	public ArrayList load() throws IOException{
+	//Sends an array list containing the moves made in the save file
+	public ArrayList load() throws IOException{ 
 		ArrayList<move> a = new ArrayList();
 		IO.openInputFile(filepath);
 		String line = IO.readLine();
+		
 		while(line != null) {
-			System.out.println(line);
-			if(line.contains("GN["))  //pulls game information from save file
-				n = line.substring(line.indexOf("GN") + 3, line.indexOf("]"));
+			//pulls game information from save file
+			if(line.contains("GN["))  
+				gn = line.substring(line.indexOf("GN") + 3, line.indexOf("]"));
 			if(line.contains("PB[")) 
-				b = line.substring(line.indexOf("PB") + 3, line.indexOf("]"));
+				bn = line.substring(line.indexOf("PB") + 3, line.indexOf("]"));
 			if(line.contains("HA[")) 
-				h = line.charAt(line.indexOf("[") + 1);
+				ha = (int)line.charAt(line.indexOf("HA") + 3)-48;
 			if(line.contains("PW[")) 
-				w = line.substring(line.indexOf("PW") + 3, line.indexOf("]"));
+				wn = line.substring(line.indexOf("PW") + 3, line.indexOf("]"));
 				
 			if(line.contains(";B[")) { //checks if a black move was made on this line
 				char x = line.charAt(line.indexOf("B") + 2); //takes alphabetical coordinates
@@ -82,13 +82,18 @@ public class FileManager extends JFrame implements ActionListener {
 				
 				a.add(m);
 			}
-			if(line.contains(";W[")) {
+			if(line.contains(";W[")) { //checks if a white move was made on the same line
 				char x = line.charAt(line.indexOf("W") + 2);
 				char y = line.charAt(line.indexOf("W") + 3);
 				boolean c = false;
 				move m = sgfRev(x, y, c);
 				
 				a.add(m); 
+			}
+			if(line.contains("C[")) {
+				String comment = line.substring(line.indexOf("C[")+2, line.lastIndexOf("]"));
+				if(!a.isEmpty())
+					a.get(a.size()-1).addComment(comment);
 			}
 			line = IO.readLine();
 		}
@@ -103,10 +108,10 @@ public class FileManager extends JFrame implements ActionListener {
 		int x, y;
 		move o;
 		boolean c;
-		IO.println("GN[" + n + "]");
-		IO.println("PB[" + b + "]");
-		IO.println("HA[" + h + "]");
-		IO.println("PW[" + w + "]");
+		IO.println("GN[" + gn + "]");
+		IO.println("PB[" + bn + "]");
+		IO.println("HA[" + ha + "]");
+		IO.println("PW[" + wn + "]");
 		IO.println("KM[7.5]");
 		IO.println("RU[Chinese] \n");
 		for(int i = 0; i < a.size(); i++) {
@@ -128,8 +133,14 @@ public class FileManager extends JFrame implements ActionListener {
 				}
 			}
 			
-			else {
-				IO.println(";W[" + sgf(x, y) + "]");
+			if(!c) {
+				IO.print(";W[" + sgf(x, y) + "]");
+				if(o.getComment() == null)
+					IO.println("");
+			}
+			
+			if(o.getComment() != null) {
+				IO.println("C["+ o.getComment() + "]");
 			}
 		}
 		IO.closeOutputFile();
@@ -173,36 +184,36 @@ public class FileManager extends JFrame implements ActionListener {
 		return c;
 	}
 
-	public String getN() {
-		return n;
+	public String getGN() {
+		return gn;
 	}
 
-	public void setN(String n) {
-		this.n = n;
+	public void setGN(String n) {
+		this.gn = n;
 	}
 
-	public String getB() {
-		return b;
+	public String getBN() {
+		return bn;
 	}
 
 	public void setB(String b) {
-		this.b = b;
+		this.bn = b;
 	}
 
-	public String getW() {
-		return w;
+	public String getWN() {
+		return wn;
 	}
 
-	public void setW(String w) {
-		this.w = w;
+	public void setWN(String w) {
+		this.wn = w;
 	}
 
-	public int getH() {
-		return h;
+	public int getHA() {
+		return ha;
 	}
 
 	public void setH(int h) {
-		this.h = h;
+		this.ha = h;
 	}
 	
 }
