@@ -102,6 +102,7 @@ public class GUI extends JFrame implements ActionListener {
 		gameWindow = new JPanel();
 		gameWindow.setLayout(null);
 		board = new JPanel(new GridLayout(19,19,0,0));
+		board.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		board.setPreferredSize(new Dimension(595, 595));
 		board.setBounds(50,50,595,595);
 		board.setVisible(true);
@@ -145,8 +146,7 @@ public class GUI extends JFrame implements ActionListener {
 		commentPanel.setBackground(Color.WHITE);
 		commentPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		
-		commentDisplay = new JTextField(25
-				);
+		commentDisplay = new JTextField(25);
 		commentDisplay.setHorizontalAlignment(JTextField.CENTER);
 		commentDisplay.setEditable(false);
 		commentDisplay.setBorder(BorderFactory.createTitledBorder("Comment"));
@@ -176,7 +176,7 @@ public class GUI extends JFrame implements ActionListener {
 		timelineBox.setBackground(Color.WHITE);
 		timelineBox.setBorder(BorderFactory.createLineBorder(Color.black));
 		timeline = new JTextArea(25,25);
-		timeline.setEditable(true);
+		timeline.setEditable(false);
 		timeline.setVisible(true);
 		scroll2= new JScrollPane(timeline);
 		
@@ -262,15 +262,17 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		
 		if(e.getSource() == info) { //User opens game info menu
-			JPanel p = new JPanel();
-			p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-			p.add(new JLabel("Game Name: " + files.getGN()));
-			p.add(new JLabel("Black Player Name: " + files.getBN()));
-			p.add(new JLabel("Handicap: " + files.getHA()));
-			p.add(new JLabel("White Player Name: " + files.getWN()));
-			p.add(new JLabel("Komi: 7.5"));
-			p.add(new JLabel("Rules: Chinese"));
-			JOptionPane.showMessageDialog(null, p, "Game Info", JOptionPane.PLAIN_MESSAGE);
+//			JPanel p = new JPanel();
+//			p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+//			p.add(new JLabel("Game Name: " + files.getGN()));
+//			p.add(new JLabel("Black Player Name: " + files.getBN()));
+//			p.add(new JLabel("Handicap: " + files.getHA()));
+//			p.add(new JLabel("White Player Name: " + files.getWN()));
+//			p.add(new JLabel("Komi: 7.5"));
+//			p.add(new JLabel("Rules: Chinese"));
+//			JOptionPane.showMessageDialog(null, p, "Game Info", JOptionPane.PLAIN_MESSAGE);
+			
+			files.edit();
 		}
 		
 		if(e.getSource() == undo) {

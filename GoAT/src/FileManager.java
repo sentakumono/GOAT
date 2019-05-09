@@ -146,6 +146,43 @@ public class FileManager extends JFrame implements ActionListener {
 		IO.closeOutputFile();
 	}
 	
+	public void edit() {
+		JPanel editPanel = new JPanel();
+		editPanel.setLayout(new BoxLayout(editPanel, BoxLayout.PAGE_AXIS));
+		editPanel.setBorder(BorderFactory.createBevelBorder(0));
+		
+		JPanel titlePanel = new JPanel();
+		titlePanel.setBorder(BorderFactory.createTitledBorder("Game Name: "));
+		JTextField title = new JTextField(25);
+		title.setText(getGN());
+		titlePanel.add(title);
+		editPanel.add(titlePanel);
+		
+		JPanel playerInfo = new JPanel();
+		playerInfo.setPreferredSize(new Dimension(200, 125));
+		playerInfo.setBorder(BorderFactory.createTitledBorder("Player Info"));
+		playerInfo.add(new JLabel("Black Player Name: "));
+		JTextField bPlayer = new JTextField(15);
+		bPlayer.setText(getBN());
+		playerInfo.add(bPlayer);
+		playerInfo.add(new JLabel("White Player Name: "));
+		JTextField wPlayer = new JTextField(15);
+		wPlayer.setText(getWN());
+		playerInfo.add(wPlayer);
+		editPanel.add(playerInfo)
+		;
+		int result = JOptionPane.showConfirmDialog(null, editPanel, " ", JOptionPane.OK_CANCEL_OPTION);
+		if(result == JOptionPane.OK_OPTION) {
+			String gameName = title.getText();
+			String blackName = bPlayer.getText();
+			String whiteName = wPlayer.getText();
+			if(gameName != null) {
+				setGN(gameName);
+			}
+		}
+		
+	}
+	
 	public void exit() {
 		int r = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", " ", JOptionPane.OK_CANCEL_OPTION);
 		if(r == JOptionPane.OK_OPTION) {
