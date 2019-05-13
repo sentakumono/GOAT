@@ -10,6 +10,7 @@ public class GUI extends JFrame implements ActionListener {
 	private static JPanel gameWindow, board, commentPanel, sidebar,timelineBox, controlPanel;
 	private JButton[][] intersections = new JButton[19][19];
 	private JButton undo, redo, commentButton;
+	private JRadioButton nullBlack, nullWhite, normalPiece;
 	private JTextField commentInput, commentDisplay;
 	private static JTextArea timeline;
 	private static JScrollPane scroll1, scroll2;
@@ -17,7 +18,7 @@ public class GUI extends JFrame implements ActionListener {
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
 	private static JMenuBar menuBar,toolBar;
 	private static JMenu file, view, game,showHide;
-	private static JMenuItem newGame, save, saveAs, load, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info;
+	private static JMenuItem newGame, save, saveAs, load, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave;
 	private static JLabel turnTimer;
 	public int turn;
 	public static FileManager files;
@@ -67,12 +68,16 @@ public class GUI extends JFrame implements ActionListener {
 		toolbar = new JMenuItem("toolbar");
 		info = new JMenuItem("Game Info");
 		info.addActionListener(this);
+		viewSave = new JMenuItem("View Save");
+		viewSave.addActionListener(this);
+		
 		showHide.add(coordinates);
 		showHide.add(moveNum);
 		showHide.add(timelineButton);
 		showHide.add(toolbar);
 		view.add(showHide);
 		view.add(info);
+		view.add(viewSave);
 		menuBar.add(view);
 		
 		game=new JMenu("Game");
@@ -203,6 +208,29 @@ public class GUI extends JFrame implements ActionListener {
 		redo.setText(Character.toString(r));
 		timelineBox.add(redo);
 		
+		nullBlack = new JRadioButton();
+		int blackPiece = 0x26AB;
+		char b = (char) blackPiece;
+		nullBlack.setText(Character.toString(b));
+		nullBlack.addActionListener(this);
+		nullWhite = new JRadioButton();
+		int whitePiece = 0x26AA;
+		char w = (char) whitePiece;
+		nullWhite.setText(Character.toString(w));
+		nullWhite.addActionListener(this);
+		
+		normalPiece = new JRadioButton();
+		normalPiece.setText("x");
+		normalPiece.addActionListener(this);
+
+		ButtonGroup radio = new ButtonGroup();
+		radio.add(nullBlack);
+		radio.add(nullWhite);
+		radio.add(normalPiece);
+		timelineBox.add(nullBlack);
+		timelineBox.add(nullWhite);
+		timelineBox.add(normalPiece);
+		
 		//dimensions of timeline panel
 		c.ipady = 40;      //make this component tall
 		c.weightx = 0.5;
@@ -234,6 +262,13 @@ public class GUI extends JFrame implements ActionListener {
 		if(e.getSource() == save) { //User saves game
 			files.save(memory);
 		}
+		
+		if(e.getSource() == saveAs) {
+			JFileChooser fc = new JFileChooser();
+			int result = fc.showSaveDialog(fc);
+	
+			
+		}
 		if(e.getSource() == load) { //User loads save game
 			timeline.setText("");
 			try{
@@ -244,7 +279,6 @@ public class GUI extends JFrame implements ActionListener {
 			setBoard();
 			turn = 0;
 			loadMove();
-			
 		}
 		if(e.getSource() == newGame) { //User restarts game
 			memory.clear();
@@ -262,19 +296,60 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		
 		if(e.getSource() == info) { //User opens game info menu
-//			JPanel p = new JPanel();
-//			p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-//			p.add(new JLabel("Game Name: " + files.getGN()));
-//			p.add(new JLabel("Black Player Name: " + files.getBN()));
-//			p.add(new JLabel("Handicap: " + files.getHA()));
-//			p.add(new JLabel("White Player Name: " + files.getWN()));
-//			p.add(new JLabel("Komi: 7.5"));
-//			p.add(new JLabel("Rules: Chinese"));
-//			JOptionPane.showMessageDialog(null, p, "Game Info", JOptionPane.PLAIN_MESSAGE);
+			JPanel editPanel = new JPanel();
+			editPanel.setLayout(new GridLayout(2, 2));
+			editPanel.setBorder(BorderFactory.createBevelBorder(0));
 			
-			files.edit();
+			JPanel titlePanel = new JPanel();
+			titlePanel.setBorder(BorderFactory.createTitledBorder("Game Name "));
+			JTextField title = new JTextField(20);
+			title.setText(files.getGN());
+			titlePanel.add(title);
+			editPanel.add(titlePanel);
+			
+			JPanel playerInfo = new JPanel();
+			playerInfo.setPreferredSize(new Dimension(125, 100));
+			playerInfo.setBorder(BorderFactory.createTitledBorder("Player Info"));
+			playerInfo.add(new JLabel("Black Player Name: "));
+			JTextField bPlayer = new JTextField(15);
+			bPlayer.setText(files.getBN());
+			playerInfo.add(bPlayer);
+			playerInfo.add(new JLabel("White Player Name: "));
+			JTextField wPlayer = new JTextField(15);
+			wPlayer.setText(files.getWN());
+			playerInfo.add(wPlayer);
+			editPanel.add(playerInfo);
+			
+			JPanel gameInfo = new JPanel();
+			gameInfo.setPreferredSize(new Dimension(100, 125));
+			gameInfo.setBorder(BorderFactory.createTitledBorder("Game Info"));
+			gameInfo.setLayout(new BoxLayout(gameInfo, BoxLayout.Y_AXIS));
+			gameInfo.add(new JLabel("Ruleset: Chinese"));
+			gameInfo.add(new JLabel("Handicap: " + files.getHA()));
+			gameInfo.add(new JLabel("Komi: 7.5"));
+			editPanel.add(gameInfo);
+			
+			int result = JOptionPane.showConfirmDialog(null, editPanel, " ", JOptionPane.OK_CANCEL_OPTION);
+			if(result == JOptionPane.OK_OPTION) {
+				String gameName = title.getText();
+				String blackName = bPlayer.getText();
+				String whiteName = wPlayer.getText();
+				if(gameName != null && gameName.length() < 20)
+					files.setGN(gameName);
+				if(blackName != null && blackName.length() < 20)
+					files.setBN(blackName);
+				if(whiteName != null && whiteName.length() < 20)
+					files.setWN(whiteName);
+			}
 		}
 		
+		if(e.getSource() == viewSave)  {
+			try{
+				files.read();
+			}catch(IOException j) {
+				JOptionPane.showMessageDialog(null, "Save file load failed.");
+			}
+		}
 		if(e.getSource() == undo) {
 			undo();
 			hasUndone = true;
@@ -308,10 +383,6 @@ public class GUI extends JFrame implements ActionListener {
 		memory.add(m); 
 	}
 	
-	public void readComment() {
-		
-	}
-	
 	public void setPiece(ActionEvent e) {
 		int whitePiece = 0x26AA;
 		int blackPiece = 0x26AB;
@@ -321,16 +392,20 @@ public class GUI extends JFrame implements ActionListener {
 			for(int j = 0; j < 19; j++) {
 				if(emptyGrid(i, j)) {				
 					if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
+						
 						if(turn%2 == 0) { //if it is black's turn
 							s = Character.toString((char)blackPiece); //unicode character
 							addBlackPiece(i, j);
 							c = true;
 						}
-						else {			  //if it is white's turn
+						else if(turn%2 != 0) {			  //if it is white's turn
 							s = Character.toString((char)whitePiece);
 							addWhitePiece(i, j);
 							c = false;
 						}
+//						else if() {
+//							
+//						}
 						
 						resetChecked();
 						if(getColor(i-1,j)==turn%2&&!hasLiberty(i-1,j,turn%2))

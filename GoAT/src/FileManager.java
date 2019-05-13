@@ -114,6 +114,7 @@ public class FileManager extends JFrame implements ActionListener {
 		IO.println("PW[" + wn + "]");
 		IO.println("KM[7.5]");
 		IO.println("RU[Chinese] \n");
+		IO.print("(");
 		for(int i = 0; i < a.size(); i++) {
 			o = (move)a.get(i);
 			x = o.getX();
@@ -121,15 +122,15 @@ public class FileManager extends JFrame implements ActionListener {
 			c = o.colour();
 			
 			if(c) {
-				if(i+1 < a.size()) {
+				if(i +1 < a.size()) {
 					move m = (move)a.get(i+1);
 					if(m.colour()) 
-						IO.println("(;B[" + sgf(x, y) + "]");
+						IO.println(";B[" + sgf(x, y) + "]");
 					else
-						IO.print("(;B[" + sgf(x, y) + "]");
+						IO.print(";B[" + sgf(x, y) + "]");
 				}
 				else if(i+1 == a.size()) {
-					IO.print("(;B[" + sgf(x, y) + "]");
+					IO.print(";B[" + sgf(x, y) + "]");
 				}
 			}
 			
@@ -140,47 +141,30 @@ public class FileManager extends JFrame implements ActionListener {
 			}
 			
 			if(o.getComment() != null) {
-				IO.println("C["+ o.getComment() + "]");
+				IO.print("C["+ o.getComment() + "]");
 			}
+		
 		}
+		IO.print(")");
 		IO.closeOutputFile();
 	}
-	
-	public void edit() {
-		JPanel editPanel = new JPanel();
-		editPanel.setLayout(new BoxLayout(editPanel, BoxLayout.PAGE_AXIS));
-		editPanel.setBorder(BorderFactory.createBevelBorder(0));
-		
-		JPanel titlePanel = new JPanel();
-		titlePanel.setBorder(BorderFactory.createTitledBorder("Game Name: "));
-		JTextField title = new JTextField(25);
-		title.setText(getGN());
-		titlePanel.add(title);
-		editPanel.add(titlePanel);
-		
-		JPanel playerInfo = new JPanel();
-		playerInfo.setPreferredSize(new Dimension(200, 125));
-		playerInfo.setBorder(BorderFactory.createTitledBorder("Player Info"));
-		playerInfo.add(new JLabel("Black Player Name: "));
-		JTextField bPlayer = new JTextField(15);
-		bPlayer.setText(getBN());
-		playerInfo.add(bPlayer);
-		playerInfo.add(new JLabel("White Player Name: "));
-		JTextField wPlayer = new JTextField(15);
-		wPlayer.setText(getWN());
-		playerInfo.add(wPlayer);
-		editPanel.add(playerInfo)
-		;
-		int result = JOptionPane.showConfirmDialog(null, editPanel, " ", JOptionPane.OK_CANCEL_OPTION);
-		if(result == JOptionPane.OK_OPTION) {
-			String gameName = title.getText();
-			String blackName = bPlayer.getText();
-			String whiteName = wPlayer.getText();
-			if(gameName != null) {
-				setGN(gameName);
-			}
+	public void read() throws IOException{
+		IO.openInputFile(filepath);
+		JPanel textPanel = new JPanel();
+		textPanel.setBorder(BorderFactory.createBevelBorder(0));
+		JTextArea text = new JTextArea(10, 25);
+		text.setEditable(false);
+
+
+		String fullSave = "";
+		String line = IO.readLine();
+		while(line != null) {
+			fullSave += line + "\n";
+			line = IO.readLine();
 		}
-		
+		text.setText(fullSave);
+		textPanel.add(text);
+		JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	public void exit() {
@@ -233,7 +217,7 @@ public class FileManager extends JFrame implements ActionListener {
 		return bn;
 	}
 
-	public void setB(String b) {
+	public void setBN(String b) {
 		this.bn = b;
 	}
 
