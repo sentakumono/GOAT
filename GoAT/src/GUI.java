@@ -11,7 +11,7 @@ public class GUI extends JFrame implements ActionListener {
 	private JButton[][] intersections = new JButton[19][19];
 	private JButton undo, redo, commentButton;
 	private JRadioButton nullBlack, nullWhite, normalPiece;
-	private JTextField commentInput, commentDisplay;
+	private JTextArea commentInput;
 	private static JTextArea timeline;
 	private static JScrollPane scroll1, scroll2;
 	private static ImageIcon center,star,black,white;
@@ -151,16 +151,15 @@ public class GUI extends JFrame implements ActionListener {
 		commentPanel.setBackground(Color.WHITE);
 		commentPanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		
-		commentDisplay = new JTextField(25);
-		commentDisplay.setHorizontalAlignment(JTextField.CENTER);
-		commentDisplay.setEditable(false);
-		commentDisplay.setBorder(BorderFactory.createTitledBorder("Comment"));
-		commentPanel.add(commentDisplay);
-		commentInput = new JTextField(25);
+		commentInput = new JTextArea(5, 25);
 		commentInput.setEditable(true);
 		commentInput.setVisible(true);
+		commentInput.setMargin(new Insets(0, 2, 0, 0));
 		commentPanel.add(commentInput);
-		
+		scroll1 = new JScrollPane(commentInput);
+		scroll1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scroll1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		commentPanel.add(scroll1);
 		commentButton = new JButton();
 		commentButton.setPreferredSize(new Dimension(125, 25));
 		commentButton.setBorder(BorderFactory.createBevelBorder(0));
@@ -169,7 +168,6 @@ public class GUI extends JFrame implements ActionListener {
 		commentPanel.add(commentButton);
 		
 		c.weightx = 0.5;
-	
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
@@ -183,8 +181,8 @@ public class GUI extends JFrame implements ActionListener {
 		timeline = new JTextArea(25,25);
 		timeline.setEditable(false);
 		timeline.setVisible(true);
+		timeline.setMargin(new Insets(0, 2, 0, 0));
 		scroll2= new JScrollPane(timeline);
-		
 		scroll2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scroll2.setVisible(true);
 		timelineBox.add(scroll2);
@@ -284,7 +282,7 @@ public class GUI extends JFrame implements ActionListener {
 			memory.clear();
 			undoMove.clear();
 			commentInput.setText("");
-			commentDisplay.setText("");
+			commentInput.setText("");
 			timeline.setText("");
 			turnTimer.setText("Moves: 0");
 			turn = 0;
@@ -334,7 +332,7 @@ public class GUI extends JFrame implements ActionListener {
 				String gameName = title.getText();
 				String blackName = bPlayer.getText();
 				String whiteName = wPlayer.getText();
-				if(gameName != null && gameName.length() < 20)
+				if(gameName != null && gameName.length() < 40)
 					files.setGN(gameName);
 				if(blackName != null && blackName.length() < 20)
 					files.setBN(blackName);
@@ -362,8 +360,9 @@ public class GUI extends JFrame implements ActionListener {
 			if(commentInput.getText() != null) {
 				String com = commentInput.getText();
 				if(com.contains("]")) {
-					commentDisplay.setText("Invalid Comment!");
+					commentInput.setText("Invalid Comment!");
 				}
+
 				else if(!memory.isEmpty())  {
 					memory.get(memory.size()-1).addComment(com);
 				}
@@ -426,7 +425,6 @@ public class GUI extends JFrame implements ActionListener {
 						resetChecked();
 						
 						if(hasLiberty(i, j, 1-turn%2)) {
-							commentDisplay.setText("");
 							commentInput.setText("");
 							timeline.append(s);
 							timeline.append((i+1) + ", " + (j+1) + "\n");
@@ -480,14 +478,13 @@ public class GUI extends JFrame implements ActionListener {
 		resetChecked();
 		
 		if(hasLiberty(i, j, 1-turn%2)) {
-			commentDisplay.setText("");
 			commentInput.setText("");
 			
 			String com = "";
 			if(!memory.isEmpty()) {
 				com = memory.get(memory.size()-1).getComment();
 			}
-			commentDisplay.setText(com);
+			commentInput.setText(com);
 			timeline.append(s);
 			timeline.append((i+1) + ", " + (j+1) + "\n");
 

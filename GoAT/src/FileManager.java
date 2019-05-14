@@ -91,7 +91,16 @@ public class FileManager extends JFrame implements ActionListener {
 				a.add(m); 
 			}
 			if(line.contains("C[")) {
-				String comment = line.substring(line.indexOf("C[")+2, line.lastIndexOf("]"));
+				String commentSubstring = line.substring(line.indexOf("C[")+2);
+				String comment = "";
+				if(commentSubstring.contains("]"))
+					comment = commentSubstring.substring(0, commentSubstring.indexOf("]"));
+				else {
+					while(!commentSubstring.contains("]")) {
+						comment += commentSubstring + "\n";
+						commentSubstring = IO.readLine();
+					}
+				}
 				if(!a.isEmpty())
 					a.get(a.size()-1).addComment(comment);
 			}
@@ -141,7 +150,7 @@ public class FileManager extends JFrame implements ActionListener {
 			}
 			
 			if(o.getComment() != null) {
-				IO.print("C["+ o.getComment() + "]");
+				IO.println("C["+ o.getComment() + "]");
 			}
 		
 		}
@@ -159,7 +168,7 @@ public class FileManager extends JFrame implements ActionListener {
 		String fullSave = "";
 		String line = IO.readLine();
 		while(line != null) {
-			fullSave += line + "\n";
+			fullSave += " " + line + "\n";
 			line = IO.readLine();
 		}
 		text.setText(fullSave);
