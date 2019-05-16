@@ -2,19 +2,23 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.File;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.util.*;
+import javax.swing.filechooser.FileSystemView;
 
 public class FileManager extends JFrame implements ActionListener {
 	private int index;
-	private String filepath, gn, bn, wn;
+	private String fileName, gn, bn, wn;
+	private File filepath;
 	private int ha;
 	
 	public FileManager() {
-		 filepath = "SaveGame.txt";
+		fileName = "SaveGame.txt";
+		filepath = new File(fileName);
 		 
 	}
 	
@@ -53,15 +57,23 @@ public class FileManager extends JFrame implements ActionListener {
 			ha = (int)handicap.getValue();
 		}
 		else if (result == JOptionPane.CANCEL_OPTION) {
-			System.exit(0);
+			if(!GUI.getInit()) {
+				System.exit(0);
+			}
 		}
 	}
 
 	//Sends an array list containing the moves made in the save file
 	public ArrayList load() throws IOException{ 
 		ArrayList<move> a = new ArrayList();
-		IO.openInputFile(filepath);
-		String line = IO.readLine();
+		String line = "";
+		try{
+			IO.openInputFile(filepath.getPath());
+			line = IO.readLine();
+		}catch(NullPointerException e) {
+			return null;
+		}		
+		
 		
 		while(line != null) {
 			//pulls game information from save file
@@ -112,7 +124,7 @@ public class FileManager extends JFrame implements ActionListener {
 	}
 	
 	public void save(ArrayList a) { //appends moves made to .sgf formatted text document
-		IO.createOutputFile(filepath);
+		IO.createOutputFile(filepath.getPath());
 		IO.println("(;FF[4]GM[1]SZ[19]");
 		int x, y;
 		move o;
@@ -154,16 +166,17 @@ public class FileManager extends JFrame implements ActionListener {
 			}
 		
 		}
-		IO.print(")");
+		IO.print("))");
 		IO.closeOutputFile();
 	}
 	public void read() throws IOException{
-		IO.openInputFile(filepath);
+		IO.openInputFile(filepath.getPath());
 		JPanel textPanel = new JPanel();
 		textPanel.setBorder(BorderFactory.createBevelBorder(0));
 		JTextArea text = new JTextArea(10, 25);
 		text.setEditable(false);
-
+		JScrollPane scroll = new JScrollPane(text);
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
 		String fullSave = "";
 		String line = IO.readLine();
@@ -172,7 +185,7 @@ public class FileManager extends JFrame implements ActionListener {
 			line = IO.readLine();
 		}
 		text.setText(fullSave);
-		textPanel.add(text);
+		textPanel.add(scroll);
 		JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
 	}
 	
@@ -244,6 +257,19 @@ public class FileManager extends JFrame implements ActionListener {
 
 	public void setH(int h) {
 		this.ha = h;
+	}
+	
+	public void setFilepath(String f) {
+		filepath.delete();
+		filepath = new File(f);
+	}
+	
+	public void setFilepath(File f) {
+		this.filepath = f;
+	}
+	
+	public File getFilepath() {
+		return filepath;
 	}
 	
 }

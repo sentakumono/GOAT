@@ -1,11 +1,14 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
+
 import java.util.*;
 import java.lang.NullPointerException;
 import java.io.IOException;
+import java.io.File;
 
-public class GUI extends JFrame implements ActionListener {
+public class GUI extends JFrame implements ActionListener, KeyListener {
 
 	private static JPanel gameWindow, board, commentPanel, sidebar,timelineBox, controlPanel;
 	private JButton[][] intersections = new JButton[19][19];
@@ -18,14 +21,14 @@ public class GUI extends JFrame implements ActionListener {
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
 	private static JMenuBar menuBar,toolBar;
 	private static JMenu file, view, game,showHide;
-	private static JMenuItem newGame, save, saveAs, load, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave;
+	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave;
 	private static JLabel turnTimer;
 	public int turn;
 	public static FileManager files;
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
-	public boolean isInit = false, hasUndone = false;
+	public static boolean isInit = false, hasUndone = false;
 	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
@@ -38,7 +41,9 @@ public class GUI extends JFrame implements ActionListener {
 		setResizable(true);
 		
 		//Dropdown menus
-		controlPanel= new JPanel(new FlowLayout(1,20,15));
+		controlPanel= new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
+		//controlPanel.setBackground(new Color(240, 240, 240));
+		controlPanel.setBorder(BorderFactory.createSoftBevelBorder(0));
 		menuBar=new JMenuBar();
 		
 		file=new JMenu("File");
@@ -48,14 +53,17 @@ public class GUI extends JFrame implements ActionListener {
 		save.addActionListener(this);
 		saveAs= new JMenuItem("Save as");
 		saveAs.addActionListener(this);
-		load= new JMenuItem("Load");
+		load= new JMenuItem("Load Recent");
 		load.addActionListener(this);
+		open = new JMenuItem("Open");
+		open.addActionListener(this);
 		exit= new JMenuItem("Exit");
 		exit.addActionListener(this);
 		file.add(newGame);
 		file.add(save);
 		file.add(saveAs);
 		file.add(load);
+		file.add(open);
 		file.add(exit);
 		
 		menuBar.add(file);
@@ -104,8 +112,6 @@ public class GUI extends JFrame implements ActionListener {
 		
 		
 		//Main GUI window
-		gameWindow = new JPanel();
-		gameWindow.setLayout(null);
 		board = new JPanel(new GridLayout(19,19,0,0));
 		board.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		board.setPreferredSize(new Dimension(595, 595));
@@ -114,6 +120,8 @@ public class GUI extends JFrame implements ActionListener {
 		board.setEnabled(true);
 		board.setBackground(new Color(181,129,32));
 		board.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		board.addKeyListener(this);
+		board.setFocusable(true);
 		
 		center = new ImageIcon("PieceIcons/center.jpg");
 		star = new ImageIcon("PieceIcons/star.jpg");
@@ -139,6 +147,8 @@ public class GUI extends JFrame implements ActionListener {
 		turn = 0;
 		
 		gameWindow = new JPanel(new FlowLayout(1,30,40));
+		gameWindow.setFocusable(true);
+		gameWindow.addKeyListener(this);
 		sidebar = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -155,6 +165,8 @@ public class GUI extends JFrame implements ActionListener {
 		commentInput.setEditable(true);
 		commentInput.setVisible(true);
 		commentInput.setMargin(new Insets(0, 2, 0, 0));
+		commentInput.setLineWrap(true);
+		commentInput.addKeyListener(this);
 		commentPanel.add(commentInput);
 		scroll1 = new JScrollPane(commentInput);
 		scroll1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -245,14 +257,18 @@ public class GUI extends JFrame implements ActionListener {
 		setBoard();
 		setHandicap(files.getHA());
 		
+		gameWindow.setVisible(true);
+		gameWindow.setFocusable(true);
+		gameWindow.addKeyListener(this);
+//		gameWindow.setBackground(new Color(200, 200, 200));
+		
 		sidebar.setVisible(true);
 		gameWindow.add(board);
 		gameWindow.add(sidebar);
 		this.add(controlPanel, BorderLayout.NORTH);
 		this.add(gameWindow, BorderLayout.CENTER);
 		setVisible(true);
-		
-
+	
 	}
 	
  
@@ -262,21 +278,50 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		
 		if(e.getSource() == saveAs) {
-			JFileChooser fc = new JFileChooser();
-			int result = fc.showSaveDialog(fc);
-	
+			JFileChooser fc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 			
+			fc.setDialogTitle("Choose a directory to save to: ");
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int result = fc.showSaveDialog(null);
+			if(result == JFileChooser.APPROVE_OPTION) {
+				if(fc.getSelectedFile().isDirectory()) {
+					files.setFilepath(fc.getSelectedFile().getPath() + "/SaveGame.txt");
+					files.save(memory);
+				}
+			}
+			if(!files.getFilepath().getPath().contains("GoAT/SaveGame.txt"))
+				load.setEnabled(false);
+			else
+				load.setEnabled(true);
 		}
 		if(e.getSource() == load) { //User loads save game
 			timeline.setText("");
 			try{
 				memory = files.load();
+				if(memory == null) {
+					commentInput.setText("***Cannot open file***");
+					newGame.doClick();
+				}
 			}catch(IOException j){				
 			}
 			undoMove.clear();
 			setBoard();
 			turn = 0;
 			loadMove();
+			
+		}
+		
+		if(e.getSource() == open) {
+			JFileChooser fc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+			fc.setDialogTitle("Choose a file to open: ");
+			fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			int result = fc.showOpenDialog(null);
+			if(result == JFileChooser.APPROVE_OPTION) {
+				if(fc.getSelectedFile().isFile() && !fc.getSelectedFile().getPath().contains(".txt")) {
+					files.setFilepath(fc.getSelectedFile());
+					load.doClick();
+				}
+			}
 		}
 		if(e.getSource() == newGame) { //User restarts game
 			memory.clear();
@@ -332,7 +377,7 @@ public class GUI extends JFrame implements ActionListener {
 				String gameName = title.getText();
 				String blackName = bPlayer.getText();
 				String whiteName = wPlayer.getText();
-				if(gameName != null && gameName.length() < 40)
+				if(gameName != null && gameName.length() < 50)
 					files.setGN(gameName);
 				if(blackName != null && blackName.length() < 20)
 					files.setBN(blackName);
@@ -374,7 +419,39 @@ public class GUI extends JFrame implements ActionListener {
 		}
 		setPiece(e);
 		turnTimer.setText("Moves: " + turn);
+		
+
 	}
+	
+	
+	public void keyPressed(KeyEvent e) {
+		if(e.getSource() == commentInput) {
+			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+				commentButton.doClick();
+			}
+		}
+		if(e.isControlDown()) {
+			if(e.getKeyCode() == KeyEvent.VK_Z) 
+				undo.doClick();
+			else if(e.getKeyCode() == KeyEvent.VK_Y)
+				redo.doClick();
+		}
+		
+		
+	}
+
+	
+	public void keyReleased(KeyEvent e) {
+				
+	}
+
+	
+	public void keyTyped(KeyEvent e) {
+				
+	}
+	
+
+	
 	
 	//store move made into memory
 	public void storeMove(int x, int y, boolean c) { 
@@ -402,9 +479,6 @@ public class GUI extends JFrame implements ActionListener {
 							addWhitePiece(i, j);
 							c = false;
 						}
-//						else if() {
-//							
-//						}
 						
 						resetChecked();
 						if(getColor(i-1,j)==turn%2&&!hasLiberty(i-1,j,turn%2))
@@ -587,7 +661,6 @@ public class GUI extends JFrame implements ActionListener {
 				intersections[i][j].setBorder(BorderFactory.createEmptyBorder());
 				intersections[i][j].setVisible(true);
 				//intersections[i][j].add(new JLabel(black));
-			
 				intersections[i][j].addActionListener(this);
 				board.add(intersections[i][j]);
 			}
@@ -835,6 +908,9 @@ public class GUI extends JFrame implements ActionListener {
 			intersections[i][j].setIcon(center);
 		}
 	}
-	
 
+	public static boolean getInit() {
+		return isInit;
+	}
 }
+
