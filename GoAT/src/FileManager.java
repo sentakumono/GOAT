@@ -12,14 +12,21 @@ import javax.swing.filechooser.FileSystemView;
 
 public class FileManager extends JFrame implements ActionListener {
 	private int index;
-	private String fileName, gn, bn, wn;
+	private String gn, bn, wn;
 	private File filepath;
 	private int ha;
 	
 	public FileManager() {
-		fileName = "SaveGame.txt";
-		filepath = new File(fileName);
-		 
+		initiate();
+
+		String filename = gn;
+		if(filename.contains(" ")) {
+			filename.replace(" ", "_");
+		}
+		if(filename.contains("/")) {
+			filename.replace("/", " ");
+		}
+		filepath = new File(filename + ".txt");
 	}
 	
 	public void initiate() { //asks user for game & player information to append to file
@@ -47,20 +54,29 @@ public class FileManager extends JFrame implements ActionListener {
 		
 		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
 		
+		
 		if(result == JOptionPane.OK_OPTION) {
-			if(name.getText().length() < 20)	
+			if(name.getText() == null || name.getText().length() > 30 || name.getText().contains("/")) {
+				int	confirm = JOptionPane.showConfirmDialog(null, "Invalid game name", "Error", JOptionPane.PLAIN_MESSAGE);
+				if(confirm == JOptionPane.OK_OPTION)
+					initiate();
+			}
+			else {
 				gn = name.getText();
-			if(blackName.getText().length() < 20)
-				bn = blackName.getText();
-			if(whiteName.getText().length() < 20)
-				wn = whiteName.getText();
-			ha = (int)handicap.getValue();
+				if(blackName.getText().length() < 20)
+					bn = blackName.getText();
+				if(whiteName.getText().length() < 20)
+					wn = whiteName.getText();
+				ha = (int)handicap.getValue();
+				}
 		}
 		else if (result == JOptionPane.CANCEL_OPTION) {
 			if(!GUI.getInit()) {
 				System.exit(0);
 			}
 		}
+
+		
 	}
 
 	//Sends an array list containing the moves made in the save file
@@ -124,6 +140,9 @@ public class FileManager extends JFrame implements ActionListener {
 	}
 	
 	public void save(ArrayList a) { //appends moves made to .sgf formatted text document
+		if(filepath.getName() == "") {
+			setFilepath("SaveGame.txt");
+		}
 		IO.createOutputFile(filepath.getPath());
 		IO.println("(;FF[4]GM[1]SZ[19]");
 		int x, y;

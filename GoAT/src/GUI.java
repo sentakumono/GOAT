@@ -250,8 +250,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		sidebar.add(timelineBox,c);
 
 		//initialize game information 
-		files = new FileManager();
-		files.initiate();		
+		files = new FileManager();		
 		
 		//initialize board
 		setBoard();
@@ -260,7 +259,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		gameWindow.setVisible(true);
 		gameWindow.setFocusable(true);
 		gameWindow.addKeyListener(this);
-//		gameWindow.setBackground(new Color(200, 200, 200));
+		gameWindow.setBorder(BorderFactory.createBevelBorder(0));
 		
 		sidebar.setVisible(true);
 		gameWindow.add(board);
@@ -289,11 +288,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 					files.save(memory);
 				}
 			}
-			if(!files.getFilepath().getPath().contains("GoAT/SaveGame.txt"))
-				load.setEnabled(false);
-			else
-				load.setEnabled(true);
 		}
+		
 		if(e.getSource() == load) { //User loads save game
 			timeline.setText("");
 			try{
@@ -317,7 +313,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			int result = fc.showOpenDialog(null);
 			if(result == JFileChooser.APPROVE_OPTION) {
-				if(fc.getSelectedFile().isFile() && !fc.getSelectedFile().getPath().contains(".txt")) {
+				if(fc.getSelectedFile().isFile() && fc.getSelectedFile().getPath().contains(".txt")) {
 					files.setFilepath(fc.getSelectedFile());
 					load.doClick();
 				}
@@ -334,7 +330,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			setBoard();
 			
 			files = new FileManager();
-			files.initiate();
 			setHandicap(files.getHA());
 		}
 		
@@ -440,7 +435,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 	}
 
-	
 	public void keyReleased(KeyEvent e) {
 				
 	}
@@ -449,10 +443,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public void keyTyped(KeyEvent e) {
 				
 	}
-	
 
-	
-	
 	//store move made into memory
 	public void storeMove(int x, int y, boolean c) { 
  		m = new move(x, y, c);
