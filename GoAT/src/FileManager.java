@@ -1,14 +1,10 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.File;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.util.*;
-import javax.swing.filechooser.FileSystemView;
+
 
 public class FileManager extends JFrame implements ActionListener {
 	private int index;
@@ -18,28 +14,31 @@ public class FileManager extends JFrame implements ActionListener {
 	
 	public FileManager() {
 		initiate();
-
-		String filename = gn;
-		if(filename.contains(" ")) {
-			filename.replace(" ", "_");
+		if(gn != null) {
+			String filename = gn;
+			if(filename.contains("/")) {
+				filename = filename.replace('/', ' ');
+			}
+			if(filename.contains(" ")) {
+				filename = filename.replace(' ', '_');
+			}
+			
+			filepath = new File(filename + ".txt");
 		}
-		if(filename.contains("/")) {
-			filename.replace("/", " ");
-		}
-		filepath = new File(filename + ".txt");
 	}
 	
 	public void initiate() { //asks user for game & player information to append to file
-		JTextField name = new JTextField(4);
-		JTextField blackName = new JTextField(4);
-		JTextField whiteName = new JTextField(4);
-		JTextField timer = new JTextField(4);
+		JTextField name = new JTextField();
+		JTextField blackName = new JTextField();
+		JTextField whiteName = new JTextField();
+		JTextField timer = new JTextField();
 		SpinnerModel j = new SpinnerNumberModel(0, 0, 9, 1);
 		JSpinner handicap = new JSpinner(j);
 	
 		
 		JPanel p = new JPanel();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+		p.add(new JLabel(new ImageIcon("GoatLogo.jpg")));
 		p.add(new JLabel("Game Name: \n"));
 		p.add(name);
 		p.add(new JLabel(" "));
@@ -50,13 +49,14 @@ public class FileManager extends JFrame implements ActionListener {
 		p.add(handicap);
 		p.add(new JLabel(" "));
 		p.add(new JLabel("White Player: \n"));
+		
 		p.add(whiteName);		
 		
-		int result = JOptionPane.showConfirmDialog(null, p, " ", JOptionPane.OK_CANCEL_OPTION);
+		int result = JOptionPane.showConfirmDialog(null, p, "Set your game info", JOptionPane.OK_CANCEL_OPTION);
 		
 		
 		if(result == JOptionPane.OK_OPTION) {
-			if(name.getText() == null || name.getText().length() > 30 || name.getText().contains("/")) {
+			if(name.getText() == null || name.getText().length() > 30) {
 				int	confirm = JOptionPane.showConfirmDialog(null, "Invalid game name", "Error", JOptionPane.PLAIN_MESSAGE);
 				if(confirm == JOptionPane.OK_OPTION)
 					initiate();
@@ -75,8 +75,10 @@ public class FileManager extends JFrame implements ActionListener {
 				System.exit(0);
 			}
 		}
-
-		
+		else {
+			if(!GUI.getInit())
+			System.exit(0);
+		}
 	}
 
 	//Sends an array list containing the moves made in the save file
@@ -140,7 +142,7 @@ public class FileManager extends JFrame implements ActionListener {
 	}
 	
 	public void save(ArrayList a) { //appends moves made to .sgf formatted text document
-		if(filepath.getName() == "") {
+		if(filepath.getName().equals(".txt")) {
 			setFilepath("SaveGame.txt");
 		}
 		IO.createOutputFile(filepath.getPath());
@@ -189,23 +191,26 @@ public class FileManager extends JFrame implements ActionListener {
 		IO.closeOutputFile();
 	}
 	public void read() throws IOException{
-		IO.openInputFile(filepath.getPath());
-		JPanel textPanel = new JPanel();
-		textPanel.setBorder(BorderFactory.createBevelBorder(0));
-		JTextArea text = new JTextArea(10, 25);
-		text.setEditable(false);
-		JScrollPane scroll = new JScrollPane(text);
-		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-		String fullSave = "";
-		String line = IO.readLine();
-		while(line != null) {
-			fullSave += " " + line + "\n";
-			line = IO.readLine();
+		if(GUI.hasUserSaved()) {
+			IO.openInputFile(filepath.getPath());
+			JPanel textPanel = new JPanel();
+			textPanel.setBorder(BorderFactory.createBevelBorder(0));
+			JTextArea text = new JTextArea(10, 25);
+			text.setEditable(false);
+			JScrollPane scroll = new JScrollPane(text);
+			scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+	
+			String fullSave = "";
+			
+			String line = IO.readLine();
+			while(line != null) {
+				fullSave += " " + line + "\n";
+				line = IO.readLine();
+			}
+			text.setText(fullSave);
+			textPanel.add(scroll);
+			JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
 		}
-		text.setText(fullSave);
-		textPanel.add(scroll);
-		JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	public void exit() {
@@ -291,4 +296,4 @@ public class FileManager extends JFrame implements ActionListener {
 		return filepath;
 	}
 	
-}
+}	

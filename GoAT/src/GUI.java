@@ -1,12 +1,11 @@
+    
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 
 import java.util.*;
-import java.lang.NullPointerException;
 import java.io.IOException;
-import java.io.File;
 
 public class GUI extends JFrame implements ActionListener, KeyListener {
 
@@ -28,7 +27,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
-	public static boolean isInit = false, hasUndone = false;
+	public static boolean isInit = false, hasUndone = false, userSaved = false;
 	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
@@ -274,6 +273,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == save) { //User saves game
 			files.save(memory);
+			userSaved = true;
 		}
 		
 		if(e.getSource() == saveAs) {
@@ -286,6 +286,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				if(fc.getSelectedFile().isDirectory()) {
 					files.setFilepath(fc.getSelectedFile().getPath() + "/SaveGame.txt");
 					files.save(memory);
+					userSaved = true;
 				}
 			}
 		}
@@ -327,6 +328,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			timeline.setText("");
 			turnTimer.setText("Moves: 0");
 			turn = 0;
+			userSaved = false;
 			setBoard();
 			
 			files = new FileManager();
@@ -417,8 +419,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 
 	}
-	
-	
+
 	public void keyPressed(KeyEvent e) {
 		if(e.getSource() == commentInput) {
 			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -903,5 +904,13 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public static boolean getInit() {
 		return isInit;
 	}
-}
+	
+	public static boolean hasUserSaved() {
+		return userSaved;
+	}
 
+	public static void setUserSaved(boolean userSaved) {
+		GUI.userSaved = userSaved;
+	}
+	
+}
