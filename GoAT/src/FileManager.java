@@ -1,12 +1,10 @@
 import java.io.IOException;
 import java.io.File;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.util.*;
 
 
-public class FileManager extends JFrame implements ActionListener {
+public class FileManager extends JFrame {
 	private int index;
 	private String gn, bn, wn;
 	private File filepath;
@@ -19,9 +17,9 @@ public class FileManager extends JFrame implements ActionListener {
 			if(filename.contains("/")) {
 				filename = filename.replace('/', ' ');
 			}
-			if(filename.contains(" ")) {
-				filename = filename.replace(' ', '_');
-			}
+//			if(filename.contains(" ")) {
+//				filename = filename.replace(' ', '_');
+//			}
 			
 			filepath = new File(filename + ".txt");
 		}
@@ -56,7 +54,7 @@ public class FileManager extends JFrame implements ActionListener {
 		
 		
 		if(result == JOptionPane.OK_OPTION) {
-			if(name.getText() == null || name.getText().length() > 30) {
+			if(name.getText().equals("") || name.getText().length() > 30) {
 				int	confirm = JOptionPane.showConfirmDialog(null, "Invalid game name", "Error", JOptionPane.PLAIN_MESSAGE);
 				if(confirm == JOptionPane.OK_OPTION)
 					initiate();
@@ -85,13 +83,22 @@ public class FileManager extends JFrame implements ActionListener {
 	public ArrayList load() throws IOException{ 
 		ArrayList<move> a = new ArrayList();
 		String line = "";
-		try{
-			IO.openInputFile(filepath.getPath());
+		if(GUI.hasUserSaved()) {
+			try{
+				IO.openInputFile(filepath.getPath());
+				line = IO.readLine();
+			}catch(NullPointerException e) {
+				return null;
+			}		
+		}
+		else {
+			if(readFilepath() != null)
+				IO.openInputFile(readFilepath());
+			else {
+				System.out.println("Hey dont do that");
+			}
 			line = IO.readLine();
-		}catch(NullPointerException e) {
-			return null;
-		}		
-		
+		}
 		
 		while(line != null) {
 			//pulls game information from save file
@@ -193,35 +200,61 @@ public class FileManager extends JFrame implements ActionListener {
 	public void read() throws IOException{
 		if(GUI.hasUserSaved()) {
 			IO.openInputFile(filepath.getPath());
-			JPanel textPanel = new JPanel();
-			textPanel.setBorder(BorderFactory.createBevelBorder(0));
-			JTextArea text = new JTextArea(10, 25);
-			text.setEditable(false);
-			JScrollPane scroll = new JScrollPane(text);
-			scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-	
-			String fullSave = "";
-			
-			String line = IO.readLine();
-			while(line != null) {
-				fullSave += " " + line + "\n";
-				line = IO.readLine();
-			}
-			text.setText(fullSave);
-			textPanel.add(scroll);
-			JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
 		}
+		else {
+			IO.openInputFile(readFilepath());
+		}
+		JPanel textPanel = new JPanel();
+		textPanel.setBorder(BorderFactory.createBevelBorder(0));
+		JTextArea text = new JTextArea(10, 25);
+		text.setEditable(false);
+		JScrollPane scroll = new JScrollPane(text);
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+	
+		String fullSave = "";
+			
+		String line = IO.readLine();
+		while(line != null) {
+			fullSave += " " + line + "\n";
+			line = IO.readLine();
+		}
+		text.setText(fullSave);
+		textPanel.add(scroll);
+		JOptionPane.showConfirmDialog(null, textPanel, "Save File: ", JOptionPane.PLAIN_MESSAGE);
+		
 	}
 	
 	public void exit() {
 		int r = JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", " ", JOptionPane.OK_CANCEL_OPTION);
 		if(r == JOptionPane.OK_OPTION) {
+			saveFilepath();
 			System.exit(0);
 		}
 	}
 	
-	public void actionPerformed(ActionEvent arg0) {
+	//save the current filepath to be read from in the next instance of the application
+	public void saveFilepath() {
+		IO.createOutputFile("Filepath.txt");
+		if(filepath.getName().equals(".txt")) {
+			setFilepath("SaveGame.txt");
+		}
+		if(GUI.hasUserSaved()) {
+		IO.print(filepath.getPath());
+		}
+		IO.closeOutputFile();
+	}
+	
+	//load the filepath saved in the external file
+	public String readFilepath() {
+		IO.openInputFile("Filepath.txt");
+		String line = ""; 
+		try {
+			line = IO.readLine();
+		}catch(IOException e) {
+			return null;
+		}
 		
+		return line;
 	}
 	
 	//converts char coordinate to integer

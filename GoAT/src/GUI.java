@@ -37,7 +37,10 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		super("GO");
 		setSize(1000, 800);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setResizable(true);
+		setResizable(false);
+		
+		//initialize game information 
+		files = new FileManager();		
 		
 		//Dropdown menus
 		controlPanel= new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
@@ -54,6 +57,9 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		saveAs.addActionListener(this);
 		load= new JMenuItem("Load Recent");
 		load.addActionListener(this);
+		if(files.readFilepath() == null) {
+			load.setEnabled(false);
+		}
 		open = new JMenuItem("Open");
 		open.addActionListener(this);
 		exit= new JMenuItem("Exit");
@@ -248,8 +254,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		c.gridy = 1;
 		sidebar.add(timelineBox,c);
 
-		//initialize game information 
-		files = new FileManager();		
+
 		
 		//initialize board
 		setBoard();
@@ -271,12 +276,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	
  
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == save) { //User saves game
+		//User saves to default directory
+		if(e.getSource() == save) { 
 			files.save(memory);
 			userSaved = true;
+			load.setEnabled(true);
 		}
 		
-		if(e.getSource() == saveAs) {
+		//User chooses the directory in which to save the game
+		if(e.getSource() == saveAs) { 
 			JFileChooser fc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 			
 			fc.setDialogTitle("Choose a directory to save to: ");
@@ -284,14 +292,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			int result = fc.showSaveDialog(null);
 			if(result == JFileChooser.APPROVE_OPTION) {
 				if(fc.getSelectedFile().isDirectory()) {
-					files.setFilepath(fc.getSelectedFile().getPath() + "/SaveGame.txt");
+					files.setFilepath(fc.getSelectedFile().getPath() + "/" + files.getFilepath().getName());
 					files.save(memory);
 					userSaved = true;
 				}
 			}
 		}
 		
-		if(e.getSource() == load) { //User loads save game
+		//User loads save game from previous file path
+		if(e.getSource() == load) {
 			timeline.setText("");
 			try{
 				memory = files.load();
@@ -308,6 +317,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			
 		}
 		
+		//User chooses a saved file to load
 		if(e.getSource() == open) {
 			JFileChooser fc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
 			fc.setDialogTitle("Choose a file to open: ");
@@ -320,7 +330,10 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				}
 			}
 		}
-		if(e.getSource() == newGame) { //User restarts game
+		
+		//User restarts game
+		if(e.getSource() == newGame) { 
+			files.saveFilepath();
 			memory.clear();
 			undoMove.clear();
 			commentInput.setText("");
@@ -329,13 +342,17 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			turnTimer.setText("Moves: 0");
 			turn = 0;
 			userSaved = false;
+			if(files.readFilepath() == null) {
+				load.setEnabled(false);
+			}
 			setBoard();
 			
 			files = new FileManager();
 			setHandicap(files.getHA());
 		}
 		
-		if(e.getSource() == info) { //User opens game info menu
+		//User opens game info menu
+		if(e.getSource() == info) { 
 			JPanel editPanel = new JPanel();
 			editPanel.setLayout(new GridLayout(2, 2));
 			editPanel.setBorder(BorderFactory.createBevelBorder(0));
@@ -383,6 +400,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			}
 		}
 		
+		//Window to view the save file in the .sgf format
 		if(e.getSource() == viewSave)  {
 			try{
 				files.read();
@@ -390,14 +408,19 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				JOptionPane.showMessageDialog(null, "Save file load failed.");
 			}
 		}
+		
+		//Uses the undo button
 		if(e.getSource() == undo) {
 			undo();
 			hasUndone = true;
 		}
 		
+		//uses the redo button
 		if(e.getSource() == redo) {
 			redo();
 		}
+		
+		//appends a comment to a move 
 		if(e.getSource() == commentButton) {
 			if(commentInput.getText() != null) {
 				String com = commentInput.getText();
@@ -411,21 +434,29 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			}
 		}
 		 
-		if(e.getSource() == exit) { //close output file and close program
+		//close output file and close program
+		if(e.getSource() == exit) { 
 			files.exit();
 		}
+		//check the board for an action
 		setPiece(e);
-		turnTimer.setText("Moves: " + turn);
 		
-
+		turnTimer.setText("Moves: " + turn);
 	}
 
+	//Basic key input
+	/*
+	 * Note: Keyboard input is only recognized when the comment box is selected,
+	 * 		 due to it being the only focusable object in the GUI
+	 */
 	public void keyPressed(KeyEvent e) {
+		//Pressing enter in the comment input box appends the comment
 		if(e.getSource() == commentInput) {
 			if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-				commentButton.doClick();
+				commentButton.doClick(); 
 			}
 		}
+		//control + z undos, control + y redos
 		if(e.isControlDown()) {
 			if(e.getKeyCode() == KeyEvent.VK_Z) 
 				undo.doClick();
@@ -439,8 +470,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public void keyReleased(KeyEvent e) {
 				
 	}
-
-	
 	public void keyTyped(KeyEvent e) {
 				
 	}
