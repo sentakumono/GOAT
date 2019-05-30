@@ -36,9 +36,12 @@ public class FileManager extends JFrame {
 		
 		JPanel p = new JPanel();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+		p.setFocusable(true);
 		p.add(new JLabel(new ImageIcon("GoatLogo.jpg")));
 		p.add(new JLabel("Game Name: \n"));
 		p.add(name);
+		name.setFocusable(true);
+		name.requestFocusInWindow();
 		p.add(new JLabel(" "));
 		p.add(new JLabel("Black Player: \n"));
 		p.add(blackName);
@@ -95,7 +98,7 @@ public class FileManager extends JFrame {
 			if(readFilepath() != null)
 				IO.openInputFile(readFilepath());
 			else {
-				System.out.println("Hey dont do that");
+				System.out.println("Can't Load File");
 			}
 			line = IO.readLine();
 		}

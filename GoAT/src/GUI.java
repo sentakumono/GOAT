@@ -20,14 +20,15 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
 	private static JMenuBar menuBar,toolBar;
 	private static JMenu file, view, game,showHide;
-	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave;
+	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave, AI;
 	private static JLabel turnTimer;
 	public int turn;
 	public static FileManager files;
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
 	public move m;
-	public static boolean isInit = false, hasUndone = false, userSaved = false;
+	public AI computer;
+	public static boolean isInit = false, hasUndone = false, userSaved = false, isAIActive = false;
 	public static boolean[][] checked=new boolean[19][19];
 	public static void main(String[] args) {
 		new GUI();
@@ -94,14 +95,17 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		menuBar.add(view);
 		
 		game=new JMenu("Game");
-		tutorial= new JMenuItem("Tuturial");
+		tutorial= new JMenuItem("Tutorial");
 		boardSize=new JMenuItem("Board Size");
 		handicap=new JMenuItem("Handicap");
 		score = new JMenuItem("Score");
+		AI = new JMenuItem("AI");
+		AI.addActionListener(this);
 		game.add(tutorial);
 		game.add(boardSize);
 		game.add(handicap);
 		game.add(score);
+		game.add(AI);
 		
 		menuBar.add(game);
 		
@@ -148,8 +152,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			blackSides[i]= new ImageIcon("PieceIcons/blackSide"+ (i+1) +".jpg");
 			whiteSides[i]= new ImageIcon("PieceIcons/whiteSide"+ (i+1) +".jpg");
 		}
-		
-		turn = 0;
 		
 		gameWindow = new JPanel(new FlowLayout(1,30,40));
 		gameWindow.setFocusable(true);
@@ -257,6 +259,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 
 		
 		//initialize board
+		turn = 0;
 		setBoard();
 		setHandicap(files.getHA());
 		
@@ -342,6 +345,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			turnTimer.setText("Moves: 0");
 			turn = 0;
 			userSaved = false;
+			isAIActive = false;
 			if(files.readFilepath() == null) {
 				load.setEnabled(false);
 			}
@@ -438,6 +442,14 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		if(e.getSource() == exit) { 
 			files.exit();
 		}
+		if(e.getSource() == AI) {
+			String options[] = {"Easy", "Medium", "Hard", "Cancel"};
+			int result = JOptionPane.showOptionDialog(null, "Choose a Difficulty", "AI", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if(result != 3) {
+				computer = new AI(turn);
+				isAIActive = true;
+			}
+		}
 		//check the board for an action
 		setPiece(e);
 		
@@ -529,6 +541,18 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 								undoMove.clear();
 								hasUndone = false;
 							}
+							if(isAIActive) {
+								move m;
+								int colour;
+								do {
+									m = computer.getMove();
+									colour = m.colour() ? 1 : 0;
+									if(turn%2== colour) {
+										if(m.getX() != i && m.getY() != j)
+											intersections[m.getX()][m.getY()].doClick();
+									}
+								}while(turn%2 == colour);
+							}
 						}
 						else {
 							setEmpty(i, j);
@@ -574,7 +598,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 		if(hasLiberty(i, j, 1-turn%2)) {
 			commentInput.setText("");
-			
+
 			String com = "";
 			if(!memory.isEmpty()) {
 				com = memory.get(memory.size()-1).getComment();
@@ -582,7 +606,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			commentInput.setText(com);
 			timeline.append(s);
 			timeline.append((i+1) + ", " + (j+1) + "\n");
-
 			turn++;
 		}
 		else {
