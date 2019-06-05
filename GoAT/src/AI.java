@@ -1,10 +1,12 @@
-
+import java.util.*;
 public class AI {
 	public int turn;
 	public AI(int t) {
 		turn = t;
 	}
+
 	public move getMove() {
+		
 		int x = (int)(Math.random() * 18) + 1;
 		int y = (int)(Math.random() * 18) + 1;
 		boolean colour;
@@ -14,8 +16,11 @@ public class AI {
 		else {
 			colour = false;
 		}
-		
 		move AIMove = new move(x, y, colour);
 		return AIMove;
+	}
+	
+	public int colour() {
+		return turn%2;
 	}
 }

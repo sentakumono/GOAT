@@ -10,19 +10,18 @@ import java.io.IOException;
 public class GUI extends JFrame implements ActionListener, KeyListener {
 
 	private static JPanel gameWindow, board, commentPanel, sidebar,timelineBox, controlPanel;
-	private JButton[][] intersections = new JButton[19][19];
+	private static JButton[][] intersections = new JButton[19][19];
 	private JButton undo, redo, commentButton;
-	private JRadioButton nullBlack, nullWhite, normalPiece;
 	private JTextArea commentInput;
 	private static JTextArea timeline;
 	private static JScrollPane scroll1, scroll2;
 	private static ImageIcon center,star,black,white;
-	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides;
+	private static ImageIcon[] corners, sides, blackCorners, whiteCorners,blackSides, whiteSides, markers;
 	private static JMenuBar menuBar,toolBar;
-	private static JMenu file, view, game,showHide;
-	private static JMenuItem newGame, save, saveAs, load, open, exit,coordinates, moveNum, timelineButton, toolbar, tutorial, boardSize, handicap, score, info, viewSave, AI;
+	private static JMenu file, view, game,showHide, tools;
+	private static JMenuItem newGame, save, saveAs, load, open, exit, moveNum, timelineButtonHide, commentBoxHide, tutorial, boardSize, handicap, score, info, viewSave, AI, square, triangle, circle, crossing, eraser, cancel;
 	private static JLabel turnTimer;
-	public int turn;
+	public int turn,  markerType;
 	public static FileManager files;
 	public ArrayList<move> memory = new ArrayList<>();
 	public ArrayList<move>undoMove = new ArrayList<>();
@@ -45,7 +44,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 		//Dropdown menus
 		controlPanel= new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-		//controlPanel.setBackground(new Color(240, 240, 240));
 		controlPanel.setBorder(BorderFactory.createSoftBevelBorder(0));
 		menuBar=new JMenuBar();
 		
@@ -76,23 +74,46 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		
 		view=new JMenu("View");
 		showHide= new JMenu("Show/Hide");
-		coordinates = new JMenuItem("coordinates");
-		moveNum=new JMenuItem("total moves");
-		timelineButton = new JMenuItem("timeline");
-		toolbar = new JMenuItem("toolbar");
+		moveNum=new JMenuItem("Turn Timer");
+		moveNum.addActionListener(this);
+		timelineButtonHide = new JMenuItem("Timeline");
+		timelineButtonHide.addActionListener(this);
+		commentBoxHide = new JMenuItem("Comments");
+		commentBoxHide.addActionListener(this);
 		info = new JMenuItem("Game Info");
 		info.addActionListener(this);
 		viewSave = new JMenuItem("View Save");
 		viewSave.addActionListener(this);
-		
-		showHide.add(coordinates);
+	
 		showHide.add(moveNum);
-		showHide.add(timelineButton);
-		showHide.add(toolbar);
+		showHide.add(timelineButtonHide);
+		showHide.add(commentBoxHide);
 		view.add(showHide);
 		view.add(info);
 		view.add(viewSave);
 		menuBar.add(view);
+		
+		tools = new JMenu("Markers");	
+		square = new JMenuItem("Square");
+		square.addActionListener(this);
+		triangle = new JMenuItem("Triangle");
+		triangle.addActionListener(this);
+		circle = new JMenuItem("Circle");
+		circle.addActionListener(this);
+		crossing = new JMenuItem("Crossing");
+		crossing.addActionListener(this);
+		eraser = new JMenuItem("Eraser");
+		eraser.addActionListener(this);
+		cancel = new JMenuItem("Cancel");
+		cancel.addActionListener(this);
+		tools.add(square);
+		tools.add(triangle);
+		tools.add(circle);
+		tools.add(crossing);
+		tools.add(eraser);
+		tools.add(cancel);
+		menuBar.add(tools);
+		markerType=0;
 		
 		game=new JMenu("Game");
 		tutorial= new JMenuItem("Tutorial");
@@ -151,6 +172,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 			whiteCorners[i]= new ImageIcon("PieceIcons/whiteCorner"+ (i+1) +".jpg");
 			blackSides[i]= new ImageIcon("PieceIcons/blackSide"+ (i+1) +".jpg");
 			whiteSides[i]= new ImageIcon("PieceIcons/whiteSide"+ (i+1) +".jpg");
+		}
+		
+		markers = new ImageIcon[6];
+		for(int i=0; i<6; i++) {
+			markers[i]= new ImageIcon("markers/marker"+(i+1)+".jpg");
 		}
 		
 		gameWindow = new JPanel(new FlowLayout(1,30,40));
@@ -225,28 +251,6 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		redo.setText(Character.toString(r));
 		timelineBox.add(redo);
 		
-		nullBlack = new JRadioButton();
-		int blackPiece = 0x26AB;
-		char b = (char) blackPiece;
-		nullBlack.setText(Character.toString(b));
-		nullBlack.addActionListener(this);
-		nullWhite = new JRadioButton();
-		int whitePiece = 0x26AA;
-		char w = (char) whitePiece;
-		nullWhite.setText(Character.toString(w));
-		nullWhite.addActionListener(this);
-		
-		normalPiece = new JRadioButton();
-		normalPiece.setText("x");
-		normalPiece.addActionListener(this);
-
-		ButtonGroup radio = new ButtonGroup();
-		radio.add(nullBlack);
-		radio.add(nullWhite);
-		radio.add(normalPiece);
-		timelineBox.add(nullBlack);
-		timelineBox.add(nullWhite);
-		timelineBox.add(normalPiece);
 		
 		//dimensions of timeline panel
 		c.ipady = 40;      //make this component tall
@@ -279,6 +283,26 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	
  
 	public void actionPerformed(ActionEvent e) {
+		
+		if(e.getSource()==square) {
+			markerType=1;
+		}
+		if(e.getSource()==triangle) {
+			markerType=2;
+		}
+		if(e.getSource()==circle) {
+			markerType=3;
+		}
+		if(e.getSource()==crossing) {
+			markerType=4;
+		}
+		if(e.getSource()==eraser) {
+			markerType=-1;
+		}
+		if(e.getSource()==cancel) {
+			markerType=0;
+		}
+		
 		//User saves to default directory
 		if(e.getSource() == save) { 
 			files.save(memory);
@@ -442,6 +466,37 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		if(e.getSource() == exit) { 
 			files.exit();
 		}
+		
+		
+		//show/hide GUI elements
+		if(e.getSource() == moveNum) {
+			if(turnTimer.isVisible()) {
+				turnTimer.setVisible(false);			
+			}
+			else {
+				turnTimer.setVisible(true);
+			}
+		}
+		if(e.getSource() == timelineButtonHide) {
+			if(timelineBox.isVisible()) {
+				timelineBox.setVisible(false);
+			}
+			else {
+				timelineBox.setVisible(true);
+			}
+		}
+		
+		if(e.getSource() == commentBoxHide) {
+			if(commentPanel.isVisible()) {
+				commentPanel.setVisible(false);
+			}
+			else {
+				commentPanel.setVisible(true);
+			}
+		}
+		
+		
+		//Initialize the computer player
 		if(e.getSource() == AI) {
 			String options[] = {"Easy", "Medium", "Hard", "Cancel"};
 			int result = JOptionPane.showOptionDialog(null, "Choose a Difficulty", "AI", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -450,6 +505,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 				isAIActive = true;
 			}
 		}
+		
 		//check the board for an action
 		setPiece(e);
 		
@@ -497,11 +553,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		int blackPiece = 0x26AB;
 		String s = "";
 		boolean c = true;
+
 		for(int i=0;i<19;i++) { 
 			for(int j = 0; j < 19; j++) {
-				if(emptyGrid(i, j)) {				
-					if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
-						
+				if(e.getSource()==intersections[i][j]) { //check each piece if it's been clicked
+					if(markerType == 0 && emptyGrid(i, j)) {	
 						if(turn%2 == 0) { //if it is black's turn
 							s = Character.toString((char)blackPiece); //unicode character
 							addBlackPiece(i, j);
@@ -542,24 +598,53 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 								hasUndone = false;
 							}
 							if(isAIActive) {
+								
 								move m;
 								int colour;
 								do {
+									if(turn%2 == computer.colour()) {
 									m = computer.getMove();
-									colour = m.colour() ? 1 : 0;
-									if(turn%2== colour) {
+									colour = m.colour() ? 1 : 0;	
 										if(m.getX() != i && m.getY() != j)
 											intersections[m.getX()][m.getY()].doClick();
 									}
-								}while(turn%2 == colour);
+								}while(turn%2 == computer.colour());
+								System.out.println("");
 							}
+							
 						}
 						else {
 							setEmpty(i, j);
 						}
 					}
+					else if(markerType!=0) {
+						setMarker(markerType, i, j);
+					}
 				}
 			}
+		}
+	}
+	
+	public void setMarker(int type, int i, int j) {
+		if(type==-1) {
+		if(emptyGrid(i,j)) {
+			setEmpty(i,j);	
+		}
+		else if(intersections[i][j].getIcon().equals(markers[4])) {
+			addBlackPiece(i,j);
+		}
+		else if(intersections[i][j].getIcon().equals(markers[5])) {
+			addWhitePiece(i,j);
+			}
+		}
+		else if(black(i,j)){
+			intersections[i][j].setIcon(markers[4]);
+		}
+		else if(white(i,j)){
+			intersections[i][j].setIcon(markers[5]);
+		}
+		else {
+			intersections[i][j].setIcon(markers[type-1]);
 		}
 	}
 	
@@ -617,7 +702,8 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public void loadMove() {
 		for(int i = 0; i < files.getHA(); i++) {
 			turn = 0;
-			setPiece(memory.get(i).getX(), memory.get(i).getY(), memory.get(i).colour());
+			if(!memory.isEmpty())
+				setPiece(memory.get(i).getX(), memory.get(i).getY(), memory.get(i).colour());
 		}
 		for(move m : memory) { //foreach loop to iterate on every move element
 			if(memory.indexOf(m) >= files.getHA())
@@ -790,7 +876,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public boolean black(int i, int j) {
 		boolean isBlack=false;
 		Icon icon=intersections[i][j].getIcon();
-		if(icon == black) {
+		if(icon == black || icon == markers[4]) {
 			isBlack=true;
 		}
 		for(int p=0;p<4;p++) {
@@ -806,7 +892,7 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 	public boolean white(int i, int j) {
 		boolean isWhite=false;
 		Icon icon=intersections[i][j].getIcon();
-		if(icon == white) {
+		if(icon == white || icon == markers[5]) {
 			isWhite=true;
 		}
 		for(int p=0;p<4;p++) {
@@ -831,11 +917,11 @@ public class GUI extends JFrame implements ActionListener, KeyListener {
 		else return -1;
 	}
 	//check if the given grid space is empty
-	public boolean emptyGrid(int i, int j) {
+	public static boolean emptyGrid(int i, int j) {
 		boolean empty=false;
 		Icon icon=intersections[i][j].getIcon();
 		for(int p=0;p<4;p++)
-			if(icon.equals(corners[p])||icon.equals(sides[p])) 
+			if(icon.equals(corners[p])||icon.equals(sides[p]) || icon.equals(markers[p])) 
 				empty=true;
 			
 		if(icon.equals(center)) 
